@@ -1,0 +1,44 @@
+# Name of your application. Used to uniquely configure containers.
+service: saas-template-admin
+
+# Name of the container image.
+image: your-username/saas-template-admin
+
+# Deploy to these servers.
+servers:
+  web:
+    hosts:
+      - 34.134.60.186
+
+registry:
+  username: your-username
+  password:
+    - DOCKER_REGISTRY_PASSWORD
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+# Remember to run `kamal env push` after making changes!
+env:
+  clear:
+    NODE_ENV: production
+    PORT: 3000
+
+ssh:
+  user: deploy
+
+builder:
+  arch: amd64
+
+proxy:
+  ssl: true
+  host: "admin.example.com"
+  app_port: 3000
+
+aliases:
+  apps: server exec docker exec kamal-proxy kamal-proxy list
+  stats: server exec "docker stats --no-stream"
+  stats-live: server exec -i "docker stats"
+  ps: server exec "docker ps"
+  htop: server exec -i "htop"
+  server-terminal: server exec -i "bash"
+  app-terminal: app exec -i "sh"
+  logs: app logs -f
