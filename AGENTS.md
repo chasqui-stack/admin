@@ -18,9 +18,12 @@ React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui ·
 
 ## Dev
 
+Requires **Node ≥ 20.19** (Vite 8 / Vitest 4 / ESLint 10). An `.nvmrc` pins Node 22 LTS.
+
 ```bash
+nvm use                       # picks Node 22 from .nvmrc
 npm install && npm run dev    # http://localhost:5191
-npm run build && npm run lint
+npm run build && npm run lint && npm test
 ```
 
 ## Planning

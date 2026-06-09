@@ -19,5 +19,13 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // shadcn/ui co-locates a component with its `cva` variants (e.g. buttonVariants);
+      // fast-refresh granularity for those is a non-issue, so allow constant exports.
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+    },
   },
 ])

@@ -24,8 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    /* Path alias */
-    "baseUrl": ".",
+    /* Path alias (paths resolve relative to this file under moduleResolution: bundler) */
     "paths": {
       "@/*": ["./src/*"]
     }
