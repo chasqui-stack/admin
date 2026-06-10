@@ -1,0 +1,127 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "active": "Active",
+    "inactive": "Inactive",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "search": "Search",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "actions": "Actions",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "prompt": "Prompt",
+    "faq": "FAQ / RAG",
+    "tools": "Tools",
+    "conversations": "Conversations"
+  },
+  "header": {
+    "logout": "Log out",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "login": {
+    "title": "Admin Panel",
+    "subtitle": "Enter your credentials to continue",
+    "email": "Email",
+    "emailPlaceholder": "admin@example.com",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "dashboard": {
+    "title": "Chasqui",
+    "subtitle": "Configure your WhatsApp AI agent.",
+    "promptCard": "Edit the agent's system prompt, persona and rules.",
+    "faqCard": "Manage the knowledge base the agent answers from.",
+    "toolsCard": "Enable and configure the agent's tools.",
+    "conversationsCard": "Inspect contacts and their conversation threads."
+  },
+  "prompt": {
+    "title": "System prompt",
+    "subtitle": "The persona and rules the agent follows. Changes take effect on the next message — no redeploy.",
+    "label": "Prompt",
+    "lastUpdated": "Last updated: {{date}}",
+    "unsavedChanges": "Unsaved changes",
+    "saved": "Prompt saved",
+    "saveError": "Could not save the prompt"
+  },
+  "faq": {
+    "title": "FAQ knowledge base",
+    "subtitle": "Q&A pairs the agent answers from, grounded — no hallucinations.",
+    "newEntry": "New entry",
+    "editEntry": "Edit entry",
+    "question": "Question",
+    "answer": "Answer",
+    "tags": "Tags",
+    "tagsHint": "Comma-separated, e.g.: hours, store",
+    "embedded": "Indexed",
+    "notEmbedded": "Not indexed",
+    "updatedAt": "Updated",
+    "saved": "Entry saved",
+    "saveError": "Could not save the entry",
+    "deleted": "Entry deleted",
+    "deleteTitle": "Delete entry?",
+    "deleteConfirm": "\"{{question}}\" will be removed from the knowledge base. The agent will no longer answer from it.",
+    "reembedAll": "Re-embed all",
+    "reembedDone": "{{count}} entries re-embedded",
+    "reembedError": "The embeddings provider failed — try again",
+    "empty": "No entries yet. Create the first one so the agent has something to answer from.",
+    "validation": {
+      "questionRequired": "Question is required",
+      "answerRequired": "Answer is required"
+    },
+    "preview": {
+      "title": "Retrieval preview",
+      "subtitle": "See exactly what the agent would retrieve for a query.",
+      "placeholder": "e.g. opening hours",
+      "run": "Test",
+      "similarity": "similarity",
+      "noResults": "No matches — the agent would answer honestly that it doesn't know."
+    }
+  },
+  "tools": {
+    "title": "Tools",
+    "subtitle": "Enable, disable and configure the agent's tools per module.",
+    "module": "Module",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "settings": "Settings",
+    "noConfig": "This module has no configurable settings.",
+    "saved": "Configuration saved",
+    "saveError": "Could not save the configuration"
+  },
+  "conversations": {
+    "title": "Conversations",
+    "subtitle": "Read-only inspection of every contact's thread.",
+    "searchPlaceholder": "Search by name or ID…",
+    "empty": "No contacts yet.",
+    "messages": "{{count}} messages",
+    "noMessages": "No messages in this conversation.",
+    "memories": "Memories",
+    "noMemories": "No memories for this contact.",
+    "back": "Back to contacts",
+    "loadOlder": "Load older messages",
+    "type": {
+      "text": "text",
+      "audio": "audio",
+      "image": "image",
+      "button": "button"
+    }
+  }
+}

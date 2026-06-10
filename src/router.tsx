@@ -1,7 +1,15 @@
 import { createBrowserRouter } from "react-router-dom"
 import { AdminLayout } from "@/components/layout/AdminLayout"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
-import { LoginPage, DashboardPage } from "@/pages"
+import {
+  ConversationDetailPage,
+  ConversationsPage,
+  DashboardPage,
+  FaqPage,
+  LoginPage,
+  PromptPage,
+  ToolsPage,
+} from "@/pages"
 
 export const router = createBrowserRouter([
   {
@@ -16,11 +24,12 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
-        index: true,
-        element: <DashboardPage />,
-      },
-      // Prompts, FAQ/RAG, Tools, Conversations land in later sprints.
+      { index: true, element: <DashboardPage /> },
+      { path: "prompt", element: <PromptPage /> },
+      { path: "faq", element: <FaqPage /> },
+      { path: "tools", element: <ToolsPage /> },
+      { path: "conversations", element: <ConversationsPage /> },
+      { path: "conversations/:contactId", element: <ConversationDetailPage /> },
     ],
   },
 ])

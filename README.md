@@ -6,7 +6,17 @@ The operator panel: edit agent prompts, manage the FAQ knowledge base (RAG), ena
 
 ## Stack
 
-React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui.
+React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui · react-i18next.
+
+## Pages
+
+| Route | What it does |
+|---|---|
+| `/` | Dashboard — section overview |
+| `/prompt` | Edit the agent's system prompt (`agent_config`) — takes effect next turn, no redeploy |
+| `/faq` | FAQ knowledge base: CRUD, re-embed all, retrieval preview with similarity scores |
+| `/tools` | Tool registry: per-tool enable switches + module settings **auto-rendered from each module's `config_schema()`** JSON Schema (`SchemaForm`) |
+| `/conversations` | Contacts → read-only chat timeline + per-contact memories |
 
 ## Local dev
 
@@ -15,6 +25,18 @@ cp .env.example .env     # set API URL (default http://localhost:8090)
 npm install
 npm run dev              # http://localhost:5191
 ```
+
+## i18n
+
+The UI is fully bilingual (es/en) via `react-i18next` with JSON locales
+(`src/locales/{en,es}.json` — the React analog of Rails' `config/locales/*.yml`).
+
+- **HARD RULE: no hardcoded UI strings** — every user-visible literal goes
+  through `t()`. A vitest guard enforces key parity between locales.
+- Default locale: `VITE_DEFAULT_LOCALE` (.env); the header switcher persists
+  the user's choice in `localStorage`.
+- The backend stays English-only (see the parent's AGENTS.md i18n posture);
+  the frontend translates.
 
 ## Design
 

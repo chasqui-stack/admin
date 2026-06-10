@@ -8,13 +8,16 @@ The **operator panel** for Chasqui: edit prompts, manage the FAQ knowledge base,
 
 ## Stack
 
-React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui · `npm`.
+React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui · react-i18next · `npm`.
 
 ## Key rules (see ARCHITECTURE)
 
 - It's a **SPA** that talks **directly to the core REST API** (JWT). No BFF, no SSR, no server functions.
 - **Admin-only login (§4).** End users never access the admin and never authenticate.
-- Scope: editable prompts · FAQ/RAG manager · tool enable/config · conversation inspection.
+- Scope: editable prompts (`/prompt`) · FAQ/RAG manager (`/faq`) · tool enable/config (`/tools`) · conversation inspection (`/conversations`).
+- **i18n HARD RULE: no hardcoded UI strings** — everything through `t()` (`react-i18next`, locales in `src/locales/{en,es}.json`). Adding a string = adding the key to BOTH locales (a vitest guard fails on key drift). Default locale via `VITE_DEFAULT_LOCALE`; the header switcher persists to `localStorage`.
+- **Module settings render themselves**: `/tools` builds forms from each module's `config_schema()` JSON Schema via `src/components/tools/SchemaForm.tsx` (flat schemas: str/int/float/bool). A new core module needs ZERO admin changes.
+- Data layer: TanStack Query hooks in `src/hooks/` (`useAgentConfig`, `useFaq`, `useContacts`); axios client with JWT refresh in `src/lib/api-client.ts`.
 
 ## Dev
 

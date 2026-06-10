@@ -1,2 +1,7 @@
 export { LoginPage } from "./LoginPage"
 export { DashboardPage } from "./DashboardPage"
+export { PromptPage } from "./PromptPage"
+export { FaqPage } from "./FaqPage"
+export { ToolsPage } from "./ToolsPage"
+export { ConversationsPage } from "./ConversationsPage"
+export { ConversationDetailPage } from "./ConversationDetailPage"

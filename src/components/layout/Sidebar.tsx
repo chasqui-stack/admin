@@ -1,13 +1,24 @@
 import { Link, useLocation } from "react-router-dom"
-import { LayoutDashboard } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import {
+  BookOpen,
+  LayoutDashboard,
+  MessageSquare,
+  Sparkles,
+  Wrench,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  // Prompts, FAQ/RAG, Tools, Conversations are added as those modules land.
+  { key: "nav.dashboard", href: "/", icon: LayoutDashboard },
+  { key: "nav.prompt", href: "/prompt", icon: Sparkles },
+  { key: "nav.faq", href: "/faq", icon: BookOpen },
+  { key: "nav.tools", href: "/tools", icon: Wrench },
+  { key: "nav.conversations", href: "/conversations", icon: MessageSquare },
 ]
 
 export function Sidebar() {
+  const { t } = useTranslation()
   const location = useLocation()
 
   return (
@@ -24,7 +35,7 @@ export function Sidebar() {
 
           return (
             <Link
-              key={item.name}
+              key={item.key}
               to={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -34,7 +45,7 @@ export function Sidebar() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.name}
+              {t(item.key)}
             </Link>
           )
         })}

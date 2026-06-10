@@ -1,12 +1,22 @@
+import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface StatusBadgeProps {
   isActive: boolean
+  activeLabel?: string
+  inactiveLabel?: string
   className?: string
 }
 
-export function StatusBadge({ isActive, className }: StatusBadgeProps) {
+export function StatusBadge({
+  isActive,
+  activeLabel,
+  inactiveLabel,
+  className,
+}: StatusBadgeProps) {
+  const { t } = useTranslation()
+
   return (
     <Badge
       variant="outline"
@@ -18,7 +28,7 @@ export function StatusBadge({ isActive, className }: StatusBadgeProps) {
         className
       )}
     >
-      {isActive ? "Activo" : "Inactivo"}
+      {isActive ? activeLabel ?? t("common.active") : inactiveLabel ?? t("common.inactive")}
     </Badge>
   )
 }
