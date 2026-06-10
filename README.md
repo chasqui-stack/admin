@@ -16,7 +16,7 @@ React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui ·
 | `/prompt` | Edit the agent's system prompt (`agent_config`) — takes effect next turn, no redeploy |
 | `/faq` | FAQ knowledge base: CRUD, re-embed all, retrieval preview with similarity scores |
 | `/tools` | Tool registry: per-tool enable switches + module settings **auto-rendered from each module's `config_schema()`** JSON Schema (`SchemaForm`) |
-| `/conversations` | Contacts → read-only chat timeline + per-contact memories |
+| `/conversations` | Contacts → read-only chat timeline (inline images / playable audio via presigned URLs when the core has storage configured) + per-contact memories |
 
 ## Local dev
 

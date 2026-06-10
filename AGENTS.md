@@ -17,7 +17,8 @@ React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui ·
 - Scope: editable prompts (`/prompt`) · FAQ/RAG manager (`/faq`) · tool enable/config (`/tools`) · conversation inspection (`/conversations`).
 - **i18n HARD RULE: no hardcoded UI strings** — everything through `t()` (`react-i18next`, locales in `src/locales/{en,es}.json`). Adding a string = adding the key to BOTH locales (a vitest guard fails on key drift). Default locale via `VITE_DEFAULT_LOCALE`; the header switcher persists to `localStorage`.
 - **Module settings render themselves**: `/tools` builds forms from each module's `config_schema()` JSON Schema via `src/components/tools/SchemaForm.tsx` (flat schemas: str/int/float/bool). A new core module needs ZERO admin changes.
-- Data layer: TanStack Query hooks in `src/hooks/` (`useAgentConfig`, `useFaq`, `useContacts`); axios client with JWT refresh in `src/lib/api-client.ts`.
+- Data layer: TanStack Query hooks in `src/hooks/` (`useAgentConfig`, `useFaq`, `useContacts`, `useMediaUrl`); axios client with JWT refresh in `src/lib/api-client.ts`.
+- **Media in the timeline (ADR-003):** `<img>`/`<audio>` can't send the JWT header, so `MessageMedia` fetches `GET /admin/media/{id}` (presigned URL as JSON, short-lived — keep `staleTime` below the expiry) and feeds the URL to the tag. Fallback when `has_media` is false or the fetch fails: the type badge.
 
 ## Dev
 

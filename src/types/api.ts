@@ -128,6 +128,13 @@ export interface MessageItem {
   text: string | null
   meta: Record<string, unknown>
   created_at: string
+  // true = GET /admin/media/{id} returns a presigned URL (ADR-003)
+  has_media: boolean
+}
+
+export interface MediaUrlResponse {
+  url: string
+  expires_in: number
 }
 
 export interface MemoryItem {

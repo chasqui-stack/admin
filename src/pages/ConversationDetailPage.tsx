@@ -8,6 +8,7 @@ import {
   useContactMessages,
 } from "@/hooks/useContacts"
 import type { MessageItem } from "@/types/api"
+import { MessageMedia } from "@/components/shared/MessageMedia"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,6 +47,7 @@ function MessageBubble({ message }: { message: MessageItem }) {
             {t(`conversations.type.${message.type}`, { defaultValue: message.type })}
           </span>
         )}
+        <MessageMedia message={message} />
         {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
         <p
           className={cn(

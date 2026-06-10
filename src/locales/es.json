@@ -118,6 +118,8 @@
     "noMemories": "Este contacto no tiene memorias.",
     "back": "Volver a contactos",
     "loadOlder": "Cargar mensajes anteriores",
+    "mediaImageAlt": "Imagen adjunta",
+    "mediaOpen": "Abrir archivo",
     "type": {
       "text": "texto",
       "audio": "audio",
