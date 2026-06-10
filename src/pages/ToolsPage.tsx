@@ -24,19 +24,27 @@ function ModuleCard({ module }: { module: ModuleInfo }) {
   const values = draft ?? module.config ?? {}
   const isDirty = draft !== null
 
-  const handleToggle = async (toolName: string, enabled: boolean) => {
+  const writeEnabled = async (changes: Record<string, boolean>) => {
     if (!config) return
     try {
-      // Replace-the-map semantics: send everything we loaded, flip one key.
-      // Missing key = enabled, so we always write the key explicitly.
+      // Replace-the-map semantics: send everything we loaded, flip some keys.
+      // Missing key = enabled, so we always write keys explicitly.
       await updateConfig.mutateAsync({
-        enabled_tools: { ...config.enabled_tools, [toolName]: enabled },
+        enabled_tools: { ...config.enabled_tools, ...changes },
       })
       toast.success(t("tools.saved"))
     } catch {
       toast.error(t("tools.saveError"))
     }
   }
+
+  const handleToggle = (toolName: string, enabled: boolean) =>
+    writeEnabled({ [toolName]: enabled })
+
+  // Module-level kill switch: flips every tool in the module at once
+  const allEnabled = module.tools.every((tool) => tool.enabled)
+  const handleToggleModule = (enabled: boolean) =>
+    writeEnabled(Object.fromEntries(module.tools.map((tool) => [tool.name, enabled])))
 
   const handleSaveConfig = async () => {
     if (!config || draft === null) return
@@ -54,11 +62,26 @@ function ModuleCard({ module }: { module: ModuleInfo }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-lg">{module.name}</CardTitle>
-        <CardDescription>
-          {t("tools.module")} · {module.tools.length} tool
-          {module.tools.length === 1 ? "" : "s"}
-        </CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="font-mono text-lg">{module.name}</CardTitle>
+            <CardDescription>
+              {t("tools.module")} · {module.tools.length} tool
+              {module.tools.length === 1 ? "" : "s"}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {t("tools.wholeModule")}
+            </span>
+            <Switch
+              checked={allEnabled}
+              onCheckedChange={handleToggleModule}
+              disabled={updateConfig.isPending}
+              aria-label={`${module.name} — ${t("tools.wholeModule")}`}
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <ul className="space-y-3">

@@ -82,6 +82,9 @@ export function ConversationsPage() {
                         <Badge variant="outline" className="shrink-0 text-xs">
                           {contact.channel}
                         </Badge>
+                        <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
+                          {contact.wa_id ?? contact.external_id}
+                        </span>
                       </div>
                       <p className="truncate text-sm text-muted-foreground">
                         {contact.last_message?.text ??

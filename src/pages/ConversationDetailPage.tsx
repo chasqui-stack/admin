@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { ArrowLeft, Brain, FileAudio, Image as ImageIcon, MousePointerClick } from "lucide-react"
@@ -76,6 +76,20 @@ export function ConversationDetailPage() {
   const timeline = [...(messages?.items ?? [])].reverse()
   const hasOlder = (messages?.total ?? 0) > (messages?.items.length ?? 0)
 
+  // Pin the scroll to the newest message on first load (and contact switch);
+  // "load older" grows upward without yanking the view to the bottom.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const newestId = messages?.items[0]?.id
+  const pinnedFor = useRef<string | null>(null)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || newestId === undefined) return
+    if (pinnedFor.current !== contactId) {
+      pinnedFor.current = contactId
+      el.scrollTop = el.scrollHeight
+    }
+  }, [newestId, contactId])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -104,9 +118,12 @@ export function ConversationDetailPage() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+        <Card className="flex h-[calc(100vh-15rem)] min-h-[320px] flex-col overflow-hidden">
+          <CardContent
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto pt-6"
+          >
             {isLoading ? (
               <p className="text-muted-foreground">{t("common.loading")}</p>
             ) : timeline.length === 0 ? (
@@ -134,7 +151,7 @@ export function ConversationDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="h-fit">
+        <Card className="max-h-[calc(100vh-15rem)] overflow-y-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Brain className="h-4 w-4" />

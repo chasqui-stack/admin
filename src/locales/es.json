@@ -99,6 +99,7 @@
     "title": "Herramientas",
     "subtitle": "Activa, desactiva y configura las herramientas del agente por módulo.",
     "module": "Módulo",
+    "wholeModule": "Todo el módulo",
     "enabled": "Activa",
     "disabled": "Inactiva",
     "settings": "Configuración",
@@ -109,7 +110,7 @@
   "conversations": {
     "title": "Conversaciones",
     "subtitle": "Inspección de solo lectura del hilo de cada contacto.",
-    "searchPlaceholder": "Buscar por nombre o ID…",
+    "searchPlaceholder": "Buscar por nombre, teléfono o ID…",
     "empty": "Aún no hay contactos.",
     "messages": "{{count}} mensajes",
     "noMessages": "No hay mensajes en esta conversación.",

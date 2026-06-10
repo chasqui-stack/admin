@@ -99,6 +99,7 @@
     "title": "Tools",
     "subtitle": "Enable, disable and configure the agent's tools per module.",
     "module": "Module",
+    "wholeModule": "Whole module",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "settings": "Settings",
@@ -109,7 +110,7 @@
   "conversations": {
     "title": "Conversations",
     "subtitle": "Read-only inspection of every contact's thread.",
-    "searchPlaceholder": "Search by name or ID…",
+    "searchPlaceholder": "Search by name, phone or ID…",
     "empty": "No contacts yet.",
     "messages": "{{count}} messages",
     "noMessages": "No messages in this conversation.",

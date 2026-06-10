@@ -26,6 +26,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -67,6 +68,7 @@
   --accent: #ece9f6;
   --accent-foreground: #150f23;
   --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
   --border: #e6e3ef;
   --input: #e0dcea;
   --ring: #9dc1f5;
@@ -104,6 +106,7 @@
   --accent: #2d2447;
   --accent-foreground: #f4f2f8;
   --destructive: #ff6b6b;
+  --destructive-foreground: #150f23;
   --border: #362d59;
   --input: #362d59;
   --ring: #9dc1f5;
@@ -126,5 +129,11 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+  /* Tailwind 4 dropped the Preflight cursor:pointer on buttons — restore it
+     (https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor) */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
