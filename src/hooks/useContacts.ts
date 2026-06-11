@@ -1,15 +1,29 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { apiClient } from "@/lib/api-client"
 import type {
   ContactDetail,
   ContactListItem,
+  ConversationMode,
   MemoryItem,
   MessageItem,
+  ModeResponse,
   Paginated,
   PaginationParams,
 } from "@/types/api"
 
-export function useContacts(params: PaginationParams) {
+// The open conversation polls (~5s) so operator chat feels live — omakase,
+// no websockets (ADR-004).
+export const INBOX_POLL_MS = 5000
+
+export function useContacts(
+  params: PaginationParams & { mode?: ConversationMode },
+  options?: { poll?: boolean }
+) {
   return useQuery({
     queryKey: ["contacts", params],
     queryFn: async () => {
@@ -20,10 +34,11 @@ export function useContacts(params: PaginationParams) {
       return data
     },
     placeholderData: keepPreviousData,
+    refetchInterval: options?.poll ? INBOX_POLL_MS : undefined,
   })
 }
 
-export function useContact(contactId: string) {
+export function useContact(contactId: string, options?: { poll?: boolean }) {
   return useQuery({
     queryKey: ["contacts", contactId],
     queryFn: async () => {
@@ -32,10 +47,15 @@ export function useContact(contactId: string) {
       )
       return data
     },
+    refetchInterval: options?.poll ? INBOX_POLL_MS : undefined,
   })
 }
 
-export function useContactMessages(contactId: string, params: PaginationParams) {
+export function useContactMessages(
+  contactId: string,
+  params: PaginationParams,
+  options?: { poll?: boolean }
+) {
   return useQuery({
     queryKey: ["contacts", contactId, "messages", params],
     queryFn: async () => {
@@ -46,6 +66,7 @@ export function useContactMessages(contactId: string, params: PaginationParams) 
       return data
     },
     placeholderData: keepPreviousData,
+    refetchInterval: options?.poll ? INBOX_POLL_MS : undefined,
   })
 }
 
@@ -58,5 +79,36 @@ export function useContactMemories(contactId: string) {
       )
       return data.items
     },
+  })
+}
+
+// --- Inbox writes (Sprint 7, ADR-004) ---
+
+export function useSetMode(contactId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (mode: ConversationMode) => {
+      const { data } = await apiClient.put<ModeResponse>(
+        `/admin/contacts/${contactId}/mode`,
+        { mode }
+      )
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+  })
+}
+
+export function useSendOperatorMessage(contactId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (text: string) => {
+      const { data } = await apiClient.post<MessageItem>(
+        `/admin/contacts/${contactId}/messages`,
+        { text }
+      )
+      return data
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["contacts", contactId] }),
   })
 }

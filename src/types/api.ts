@@ -98,6 +98,8 @@ export interface LastMessagePreview {
   created_at: string
 }
 
+export type ConversationMode = "agent" | "human"
+
 export interface ContactListItem {
   id: string
   channel: string
@@ -108,6 +110,12 @@ export interface ContactListItem {
   updated_at: string
   message_count: number
   last_message: LastMessagePreview | null
+  // Inbox fields (ADR-004)
+  mode: ConversationMode
+  handoff_reason: string | null
+  handoff_at: string | null
+  // Anchor for WhatsApp's 24h customer-service window (computed client-side)
+  last_inbound_at: string | null
 }
 
 export interface ContactDetail {
@@ -119,6 +127,14 @@ export interface ContactDetail {
   meta: Record<string, unknown>
   created_at: string
   updated_at: string
+  mode: ConversationMode
+  handoff_reason: string | null
+  handoff_at: string | null
+  last_inbound_at: string | null
+}
+
+export interface ModeResponse {
+  mode: ConversationMode
 }
 
 export interface MessageItem {
@@ -141,6 +157,20 @@ export interface MemoryItem {
   id: string
   content: string
   has_embedding: boolean
+  created_at: string
+}
+
+// --- Leads (handoff module, /admin/modules/handoff/leads) ---
+export interface Lead {
+  id: string
+  contact_id: string
+  contact_display_name: string | null
+  name: string
+  interest: string | null
+  email: string | null
+  phone: string | null
+  notes: string | null
+  extra: Record<string, string>
   created_at: string
 }
 

@@ -24,7 +24,8 @@
     "prompt": "Prompt",
     "faq": "FAQ / RAG",
     "tools": "Tools",
-    "conversations": "Conversations"
+    "conversations": "Conversations",
+    "leads": "Leads"
   },
   "header": {
     "logout": "Log out",
@@ -50,7 +51,10 @@
     "promptCard": "Edit the agent's system prompt, persona and rules.",
     "faqCard": "Manage the knowledge base the agent answers from.",
     "toolsCard": "Enable and configure the agent's tools.",
-    "conversationsCard": "Inspect contacts and their conversation threads."
+    "conversationsCard": "Inspect contacts and their conversation threads.",
+    "leadsCard": "Leads the agent captured, with their contact details.",
+    "humanCount": "Waiting for a human",
+    "humanCountCard": "Conversations handed off and waiting for an operator."
   },
   "prompt": {
     "title": "System prompt",
@@ -120,11 +124,38 @@
     "loadOlder": "Load older messages",
     "mediaImageAlt": "Attached image",
     "mediaOpen": "Open file",
+    "filterAll": "All",
+    "filterHuman": "Needs human",
+    "emptyHuman": "No conversations waiting for a human. 🎉",
+    "needsHuman": "Needs human",
+    "handoffReason": "Handoff: {{reason}}",
+    "takeOver": "Take over",
+    "resumeBot": "Resume bot",
+    "composerPlaceholder": "Type a reply… (Enter to send)",
+    "composerBlocked": "The 24h window is closed — the user must write first",
+    "send": "Send",
+    "sending": "Sending…",
+    "windowClosesIn": "WhatsApp 24h window closes in {{time}}",
+    "windowExpired": "24h window closed — the user must write first before you can reply",
+    "sendError": "Could not send the message ({{code}})",
     "type": {
       "text": "text",
       "audio": "audio",
       "image": "image",
       "button": "button"
     }
+  },
+  "leads": {
+    "title": "Leads",
+    "subtitle": "Potential customers the agent captured in conversation.",
+    "empty": "No leads yet. They appear here when the agent captures one.",
+    "name": "Name",
+    "contact": "Conversation",
+    "email": "Email",
+    "phone": "Phone",
+    "interest": "Interest",
+    "extra": "Extra",
+    "date": "Date",
+    "viewConversation": "View conversation"
   }
 }

@@ -24,7 +24,8 @@
     "prompt": "Prompt",
     "faq": "FAQ / RAG",
     "tools": "Herramientas",
-    "conversations": "Conversaciones"
+    "conversations": "Conversaciones",
+    "leads": "Leads"
   },
   "header": {
     "logout": "Cerrar sesión",
@@ -50,7 +51,10 @@
     "promptCard": "Edita el system prompt, la persona y las reglas del agente.",
     "faqCard": "Gestiona la base de conocimiento desde la que responde el agente.",
     "toolsCard": "Activa y configura las herramientas del agente.",
-    "conversationsCard": "Inspecciona los contactos y sus hilos de conversación."
+    "conversationsCard": "Inspecciona los contactos y sus hilos de conversación.",
+    "leadsCard": "Leads capturados por el agente, con sus datos de contacto.",
+    "humanCount": "Esperando a un humano",
+    "humanCountCard": "Conversaciones derivadas que esperan a un operador."
   },
   "prompt": {
     "title": "System prompt",
@@ -120,11 +124,38 @@
     "loadOlder": "Cargar mensajes anteriores",
     "mediaImageAlt": "Imagen adjunta",
     "mediaOpen": "Abrir archivo",
+    "filterAll": "Todas",
+    "filterHuman": "Atención humana",
+    "emptyHuman": "No hay conversaciones esperando a un humano. 🎉",
+    "needsHuman": "Atención humana",
+    "handoffReason": "Derivada: {{reason}}",
+    "takeOver": "Tomar conversación",
+    "resumeBot": "Reactivar bot",
+    "composerPlaceholder": "Escribe una respuesta… (Enter para enviar)",
+    "composerBlocked": "La ventana de 24h está cerrada — el usuario debe escribir primero",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "windowClosesIn": "La ventana de 24h de WhatsApp cierra en {{time}}",
+    "windowExpired": "Ventana de 24h cerrada — el usuario debe escribir primero para poder responderle",
+    "sendError": "No se pudo enviar el mensaje ({{code}})",
     "type": {
       "text": "texto",
       "audio": "audio",
       "image": "imagen",
       "button": "botón"
     }
+  },
+  "leads": {
+    "title": "Leads",
+    "subtitle": "Clientes potenciales que el agente capturó conversando.",
+    "empty": "Aún no hay leads. Aparecerán aquí cuando el agente capture uno.",
+    "name": "Nombre",
+    "contact": "Conversación",
+    "email": "Email",
+    "phone": "Teléfono",
+    "interest": "Interés",
+    "extra": "Extra",
+    "date": "Fecha",
+    "viewConversation": "Ver conversación"
   }
 }

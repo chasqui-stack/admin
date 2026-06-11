@@ -1,14 +1,16 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, MessageSquare } from "lucide-react"
+import { ChevronRight, MessageSquare, Siren } from "lucide-react"
 import { useContacts } from "@/hooks/useContacts"
 import type { ContactListItem } from "@/types/api"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Pagination } from "@/components/shared/Pagination"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { cn } from "@/lib/utils"
 
 const PAGE_SIZE = 25
 
@@ -26,14 +28,27 @@ export function ConversationsPage() {
   const { t, i18n } = useTranslation()
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const humanOnly = searchParams.get("mode") === "human"
 
-  const { data, isLoading } = useContacts({
-    search: search || undefined,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  })
+  const { data, isLoading } = useContacts(
+    {
+      search: search || undefined,
+      mode: humanOnly ? "human" : undefined,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    },
+    { poll: true }
+  )
+  // Waiting-for-human counter for the tab badge (cheap: total only)
+  const { data: humanCount } = useContacts({ mode: "human", limit: 1 }, { poll: true })
 
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
+
+  const setFilter = (human: boolean) => {
+    setSearchParams(human ? { mode: "human" } : {})
+    setPage(1)
+  }
 
   return (
     <div className="space-y-6">
@@ -42,15 +57,39 @@ export function ConversationsPage() {
         <p className="text-muted-foreground">{t("conversations.subtitle")}</p>
       </div>
 
-      <div className="max-w-sm">
-        <SearchInput
-          value={search}
-          onChange={(value) => {
-            setSearch(value)
-            setPage(1)
-          }}
-          placeholder={t("conversations.searchPlaceholder")}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1 rounded-md border border-border p-1">
+          <Button
+            variant={humanOnly ? "ghost" : "secondary"}
+            size="sm"
+            onClick={() => setFilter(false)}
+          >
+            {t("conversations.filterAll")}
+          </Button>
+          <Button
+            variant={humanOnly ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setFilter(true)}
+          >
+            <Siren className="mr-1 h-3.5 w-3.5" />
+            {t("conversations.filterHuman")}
+            {(humanCount?.total ?? 0) > 0 && (
+              <Badge variant="destructive" className="ml-1.5 px-1.5 text-[10px]">
+                {humanCount?.total}
+              </Badge>
+            )}
+          </Button>
+        </div>
+        <div className="max-w-sm flex-1">
+          <SearchInput
+            value={search}
+            onChange={(value) => {
+              setSearch(value)
+              setPage(1)
+            }}
+            placeholder={t("conversations.searchPlaceholder")}
+          />
+        </div>
       </div>
 
       <Card>
@@ -59,7 +98,9 @@ export function ConversationsPage() {
             <p className="text-muted-foreground">{t("common.loading")}</p>
           ) : !data?.items.length ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              {t("conversations.empty")}
+              {humanOnly
+                ? t("conversations.emptyHuman")
+                : t("conversations.empty")}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -67,7 +108,10 @@ export function ConversationsPage() {
                 <li key={contact.id}>
                   <Link
                     to={`/conversations/${contact.id}`}
-                    className="flex items-center gap-4 py-3 transition-colors hover:bg-accent/50"
+                    className={cn(
+                      "flex items-center gap-4 py-3 transition-colors hover:bg-accent/50",
+                      contact.mode === "human" && "bg-destructive/5"
+                    )}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
@@ -79,6 +123,12 @@ export function ConversationsPage() {
                         <p className="truncate font-medium">
                           {contact.display_name ?? contact.external_id}
                         </p>
+                        {contact.mode === "human" && (
+                          <Badge variant="destructive" className="shrink-0 text-xs">
+                            <Siren className="mr-1 h-3 w-3" />
+                            {t("conversations.needsHuman")}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="shrink-0 text-xs">
                           {contact.channel}
                         </Badge>
@@ -87,12 +137,16 @@ export function ConversationsPage() {
                         </span>
                       </div>
                       <p className="truncate text-sm text-muted-foreground">
-                        {contact.last_message?.text ??
-                          (contact.last_message
-                            ? t(`conversations.type.${contact.last_message.type}`, {
-                                defaultValue: contact.last_message.type,
-                              })
-                            : t("conversations.noMessages"))}
+                        {contact.mode === "human" && contact.handoff_reason
+                          ? t("conversations.handoffReason", {
+                              reason: contact.handoff_reason,
+                            })
+                          : (contact.last_message?.text ??
+                            (contact.last_message
+                              ? t(`conversations.type.${contact.last_message.type}`, {
+                                  defaultValue: contact.last_message.type,
+                                })
+                              : t("conversations.noMessages")))}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3 text-sm text-muted-foreground">

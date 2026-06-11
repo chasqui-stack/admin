@@ -12,11 +12,12 @@ React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui ·
 
 | Route | What it does |
 |---|---|
-| `/` | Dashboard — section overview |
+| `/` | Dashboard — section overview + "waiting for a human" counter |
 | `/prompt` | Edit the agent's system prompt (`agent_config`) — takes effect next turn, no redeploy |
 | `/faq` | FAQ knowledge base: CRUD, re-embed all, retrieval preview with similarity scores |
 | `/tools` | Tool registry: per-tool enable switches + module settings **auto-rendered from each module's `config_schema()`** JSON Schema (`SchemaForm`) |
-| `/conversations` | Contacts → read-only chat timeline (inline images / playable audio via presigned URLs when the core has storage configured) + per-contact memories |
+| `/conversations` | Contacts → chat timeline (inline images / playable audio via presigned URLs when the core has storage configured) + per-contact memories. **Human-handoff inbox** (ADR-004): 🚨 badge + "needs human" filter, "Take over"/"Resume bot", a composer that sends through the channel (polling ~5s) and surfaces WhatsApp's 24h window (countdown / disabled when closed) |
+| `/leads` | Leads the agent captured (name, contact, email/phone, interest, configurable extra fields) |
 
 ## Local dev
 

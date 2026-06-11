@@ -5,8 +5,10 @@ import {
   LayoutDashboard,
   MessageSquare,
   Sparkles,
+  UserPlus,
   Wrench,
 } from "lucide-react"
+import { useContacts } from "@/hooks/useContacts"
 import { cn } from "@/lib/utils"
 
 const navigation = [
@@ -15,11 +17,14 @@ const navigation = [
   { key: "nav.faq", href: "/faq", icon: BookOpen },
   { key: "nav.tools", href: "/tools", icon: Wrench },
   { key: "nav.conversations", href: "/conversations", icon: MessageSquare },
+  { key: "nav.leads", href: "/leads", icon: UserPlus },
 ]
 
 export function Sidebar() {
   const { t } = useTranslation()
   const location = useLocation()
+  // Waiting-for-human badge on the conversations entry (polls, ADR-004)
+  const { data: humanCount } = useContacts({ mode: "human", limit: 1 }, { poll: true })
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar">
@@ -46,6 +51,11 @@ export function Sidebar() {
             >
               <item.icon className="h-4 w-4" />
               {t(item.key)}
+              {item.href === "/conversations" && (humanCount?.total ?? 0) > 0 && (
+                <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+                  {humanCount?.total}
+                </span>
+              )}
             </Link>
           )
         })}
