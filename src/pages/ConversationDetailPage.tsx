@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { EmojiPicker } from "frimousse"
 import {
+  AlertTriangle,
   ArrowLeft,
   Bot,
   Brain,
@@ -94,6 +95,17 @@ function MessageBubble({ message }: { message: MessageItem }) {
         )}
         <MessageMedia message={message} />
         {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
+        {message.meta.delivery_status === "failed" && (
+          <p className="mt-1 flex items-center gap-1 rounded bg-destructive/15 px-1.5 py-0.5 text-[11px] text-destructive">
+            <AlertTriangle className="h-3 w-3 shrink-0" />
+            {t("conversations.deliveryFailed", {
+              reason:
+                (message.meta.delivery_detail as string) ||
+                (message.meta.delivery_code as string) ||
+                "?",
+            })}
+          </p>
+        )}
         <p
           className={cn(
             "mt-1 text-right text-[10px]",

@@ -138,6 +138,7 @@
     "windowClosesIn": "La ventana de 24h de WhatsApp cierra en {{time}}",
     "windowExpired": "Ventana de 24h cerrada — el usuario debe escribir primero para poder responderle",
     "sendError": "No se pudo enviar el mensaje ({{code}})",
+    "deliveryFailed": "No entregado: {{reason}}",
     "emoji": "Emoji",
     "emojiSearch": "Buscar emoji…",
     "emojiEmpty": "No se encontraron emojis",
