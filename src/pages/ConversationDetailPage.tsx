@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { EmojiPicker } from "frimousse"
 import {
   ArrowLeft,
   Bot,
@@ -109,16 +110,81 @@ function MessageBubble({ message }: { message: MessageItem }) {
   )
 }
 
-// Curated grid — dependency-free; the OS picker still works on top
-const EMOJIS = [
-  "😀", "😊", "😂", "😉", "😍", "🥰", "😎", "🤔", "😅", "😢",
-  "😡", "🙏", "👍", "👎", "👋", "🤝", "👏", "💪", "🙌", "✌️",
-  "❤️", "💔", "🎉", "🔥", "⭐", "✅", "❌", "⚠️", "📦", "🚚",
-  "💰", "🧾", "📍", "📞", "⏰", "📅", "🛠️", "🤖", "🙋", "🫡",
-]
-
 // Meta's per-type media limits (decoded bytes)
 const MAX_MB: Record<string, number> = { image: 5, document: 25, audio: 16 }
+
+// WhatsApp only accepts JPEG/PNG images — anything else (webp, gif frames)
+// is re-encoded to JPEG in the browser before it ever leaves the composer.
+const WHATSAPP_IMAGE_MIMES = ["image/jpeg", "image/png"]
+
+function reencodeToJpeg(dataUri: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return reject(new Error("no canvas 2d context"))
+      ctx.fillStyle = "#ffffff" // transparency → white, not black
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      resolve(canvas.toDataURL("image/jpeg", 0.9))
+    }
+    img.onerror = () => reject(new Error("could not decode image"))
+    img.src = dataUri
+  })
+}
+
+function EmojiPanel({ onPick }: { onPick: (emoji: string) => void }) {
+  const { t, i18n } = useTranslation()
+  return (
+    <EmojiPicker.Root
+      onEmojiSelect={({ emoji }) => onPick(emoji)}
+      locale={i18n.language.startsWith("es") ? "es" : "en"}
+      className="mb-2 flex h-72 w-full flex-col rounded-md border border-border bg-background"
+    >
+      <EmojiPicker.Search
+        className="mx-2 mt-2 rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+        placeholder={t("conversations.emojiSearch")}
+      />
+      <EmojiPicker.Viewport className="relative flex-1 outline-none">
+        <EmojiPicker.Loading className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          {t("common.loading")}
+        </EmojiPicker.Loading>
+        <EmojiPicker.Empty className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          {t("conversations.emojiEmpty")}
+        </EmojiPicker.Empty>
+        <EmojiPicker.List
+          className="select-none pb-2"
+          components={{
+            CategoryHeader: ({ category, ...props }) => (
+              <div
+                className="bg-background px-3 pb-1.5 pt-3 text-xs font-medium text-muted-foreground"
+                {...props}
+              >
+                {category.label}
+              </div>
+            ),
+            Row: ({ children, ...props }) => (
+              <div className="scroll-my-1 px-1.5" {...props}>
+                {children}
+              </div>
+            ),
+            Emoji: ({ emoji, ...props }) => (
+              <button
+                className="flex size-8 items-center justify-center rounded-md text-lg data-[active]:bg-accent"
+                {...props}
+              >
+                {emoji.emoji}
+              </button>
+            ),
+          }}
+        />
+      </EmojiPicker.Viewport>
+    </EmojiPicker.Root>
+  )
+}
 
 const ACCEPT_FILES =
   "image/jpeg,image/png,image/webp,application/pdf," +
@@ -168,13 +234,22 @@ function Composer({ contact }: { contact: ContactDetail }) {
     }
     setLocalError(null)
     const reader = new FileReader()
-    reader.onload = () =>
-      setAttachment({
-        kind,
-        dataUri: reader.result as string,
-        mime: file.type,
-        name: file.name,
-      })
+    reader.onload = async () => {
+      let dataUri = reader.result as string
+      let mime = file.type
+      let name = file.name
+      if (kind === "image" && !WHATSAPP_IMAGE_MIMES.includes(mime)) {
+        try {
+          dataUri = await reencodeToJpeg(dataUri)
+          mime = "image/jpeg"
+          name = name.replace(/\.[^.]+$/, "") + ".jpg"
+        } catch {
+          setLocalError(t("conversations.attachUnsupportedImage"))
+          return
+        }
+      }
+      setAttachment({ kind, dataUri, mime, name })
+    }
     reader.readAsDataURL(file)
   }
 
@@ -298,20 +373,7 @@ function Composer({ contact }: { contact: ContactDetail }) {
         </div>
       )}
 
-      {showEmoji && (
-        <div className="mb-2 flex flex-wrap gap-1 rounded-md border border-border p-2">
-          {EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              className="rounded p-1 text-lg leading-none hover:bg-accent"
-              onClick={() => insertEmoji(emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
+      {showEmoji && <EmojiPanel onPick={insertEmoji} />}
 
       <div className="flex items-end gap-1.5">
         <Button
@@ -436,7 +498,9 @@ export function ConversationDetailPage() {
 
   // Media loads AFTER the message renders (presigned URL fetch + lazy <img>),
   // growing the content under an already-positioned scroll — re-anchor on any
-  // content growth while pinned, or the view stays cut off mid-image.
+  // content growth while pinned, or the view stays cut off mid-image. The
+  // container is observed too: the composer growing (attachment preview,
+  // emoji panel) SHRINKS it, which also unseats the bottom.
   const contentRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = scrollRef.current
@@ -446,6 +510,7 @@ export function ConversationDetailPage() {
       if (atBottom.current) el.scrollTop = el.scrollHeight
     })
     observer.observe(content)
+    observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
@@ -514,30 +579,32 @@ export function ConversationDetailPage() {
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto pt-6"
           >
-            {isLoading ? (
-              <p className="text-muted-foreground">{t("common.loading")}</p>
-            ) : timeline.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                {t("conversations.noMessages")}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {hasOlder && (
-                  <div className="text-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setLimit(limit + PAGE_SIZE)}
-                    >
-                      {t("conversations.loadOlder")}
-                    </Button>
-                  </div>
-                )}
-                {timeline.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
-                ))}
-              </div>
-            )}
+            <div ref={contentRef}>
+              {isLoading ? (
+                <p className="text-muted-foreground">{t("common.loading")}</p>
+              ) : timeline.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  {t("conversations.noMessages")}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {hasOlder && (
+                    <div className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLimit(limit + PAGE_SIZE)}
+                      >
+                        {t("conversations.loadOlder")}
+                      </Button>
+                    </div>
+                  )}
+                  {timeline.map((message) => (
+                    <MessageBubble key={message.id} message={message} />
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
           {isHuman && contact && <Composer contact={contact} />}
         </Card>
