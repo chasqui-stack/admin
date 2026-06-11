@@ -131,9 +131,16 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
   /* Tailwind 4 dropped the Preflight cursor:pointer on buttons — restore it
-     (https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor) */
+     (https://tailwindcss.com/docs/upgrade-guide#buttons-use-the-default-cursor).
+     Radix/shadcn menu and select items are DIVs with ARIA roles, not
+     <button>s, so they need the same treatment. */
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role="button"]:not(:disabled),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="menuitemradio"]:not([data-disabled]),
+  [role="option"]:not([data-disabled]),
+  [role="tab"]:not([data-disabled]) {
     cursor: pointer;
   }
 }
