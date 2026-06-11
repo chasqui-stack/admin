@@ -14,13 +14,20 @@ import {
   Image as ImageIcon,
   Mic,
   MousePointerClick,
-  Paperclip,
+  Plus,
   SendHorizontal,
   Siren,
   Smile,
   Square,
+  Trash2,
   X,
 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   useContact,
   useContactMemories,
@@ -154,7 +161,7 @@ function EmojiPanel({ onPick }: { onPick: (emoji: string) => void }) {
     <EmojiPicker.Root
       onEmojiSelect={({ emoji }) => onPick(emoji)}
       locale={i18n.language.startsWith("es") ? "es" : "en"}
-      className="mb-2 flex h-72 w-full flex-col rounded-md border border-border bg-background"
+      className="flex h-80 w-full flex-col bg-background"
     >
       <EmojiPicker.Search
         className="mx-2 mt-2 rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
@@ -198,9 +205,13 @@ function EmojiPanel({ onPick }: { onPick: (emoji: string) => void }) {
   )
 }
 
-const ACCEPT_FILES =
-  "image/jpeg,image/png,image/webp,application/pdf," +
-  ".doc,.docx,.xls,.xlsx"
+// The "+" menu mirrors WhatsApp's: photos and documents as separate entries
+const IMAGE_ACCEPT = "image/*"
+const DOC_ACCEPT = "application/pdf,.doc,.docx,.xls,.xlsx"
+
+function formatElapsed(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
+}
 
 interface Attachment {
   kind: "image" | "document" | "audio"
@@ -215,13 +226,44 @@ function Composer({ contact }: { contact: ContactDetail }) {
   const [attachment, setAttachment] = useState<Attachment | null>(null)
   const [showEmoji, setShowEmoji] = useState(false)
   const [recording, setRecording] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const [localError, setLocalError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
   const recorderRef = useRef<MediaRecorder | null>(null)
+  const sendOnStop = useRef(false)
+  const discardOnStop = useRef(false)
+  const emojiRef = useRef<HTMLDivElement>(null)
   const send = useSendOperatorMessage(contact.id)
   const window = whatsappWindow(contact)
   const blocked = window !== null && !window.open
+
+  // WhatsApp-style emoji popover: closes on outside click / Escape
+  useEffect(() => {
+    if (!showEmoji) return
+    const onDown = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
+        setShowEmoji(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowEmoji(false)
+    }
+    document.addEventListener("mousedown", onDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [showEmoji])
+
+  // Recording timer (the red counter in the bar)
+  useEffect(() => {
+    if (!recording) return
+    const id = setInterval(() => setElapsed((s) => s + 1), 1000)
+    return () => clearInterval(id)
+  }, [recording])
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current
@@ -235,11 +277,13 @@ function Composer({ contact }: { contact: ContactDetail }) {
     })
   }
 
-  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickFile = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    kind: "image" | "document"
+  ) => {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
-    const kind = file.type.startsWith("image/") ? "image" : "document"
     if (file.size > MAX_MB[kind] * 1024 * 1024) {
       setLocalError(t("conversations.attachTooLarge", { mb: MAX_MB[kind] }))
       return
@@ -265,19 +309,37 @@ function Composer({ contact }: { contact: ContactDetail }) {
     reader.readAsDataURL(file)
   }
 
-  const toggleRecording = async () => {
-    if (recording) {
-      recorderRef.current?.stop()
-      return
-    }
+  const reset = () => {
+    setText("")
+    setShowEmoji(false)
+  }
+
+  // Voice note + text goes out as TWO messages (audio first) — WhatsApp
+  // audio has no caption and the operator's text must never be dropped.
+  const sendAudio = (dataUri: string) => {
+    const trimmed = text.trim()
+    send.mutate(
+      { type: "audio", text: null, media_data_uri: dataUri, filename: null },
+      {
+        onSuccess: () => {
+          setAttachment(null)
+          if (trimmed) {
+            // follow-up text; if it fails it stays in the composer
+            send.mutate({ type: "text", text: trimmed }, { onSuccess: reset })
+          } else {
+            reset()
+          }
+        },
+      }
+    )
+  }
+
+  const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // WhatsApp accepts AAC (m4a) or Opus-in-OGG only. Ask for AAC
-      // explicitly — Chrome's bare "audio/mp4" muxes OPUS into MP4, which
-      // Meta rejects asynchronously. Opus fallbacks get remuxed to OGG by
-      // the gateway (ffmpeg) before hitting Meta.
+      // Prefer AAC; the gateway normalizes whatever comes out to MP3 anyway
       const mime =
-        ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/webm'].find((m) =>
+        ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/webm"].find((m) =>
           MediaRecorder.isTypeSupported(m)
         ) ?? "audio/webm"
       const recorder = new MediaRecorder(stream, { mimeType: mime })
@@ -287,14 +349,26 @@ function Composer({ contact }: { contact: ContactDetail }) {
       }
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop())
-        const reader = new FileReader()
-        reader.onload = () =>
-          setAttachment({ kind: "audio", dataUri: reader.result as string, mime })
-        reader.readAsDataURL(new Blob(chunks, { type: mime }))
         setRecording(false)
+        if (discardOnStop.current) {
+          discardOnStop.current = false
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUri = reader.result as string
+          if (sendOnStop.current) {
+            sendOnStop.current = false
+            sendAudio(dataUri) // WhatsApp behavior: send right as you stop
+          } else {
+            setAttachment({ kind: "audio", dataUri, mime })
+          }
+        }
+        reader.readAsDataURL(new Blob(chunks, { type: mime }))
       }
       recorderRef.current = recorder
       recorder.start()
+      setElapsed(0)
       setRecording(true)
       setLocalError(null)
     } catch {
@@ -302,35 +376,41 @@ function Composer({ contact }: { contact: ContactDetail }) {
     }
   }
 
-  const canSend = !blocked && !send.isPending && !recording
+  const cancelRecording = () => {
+    discardOnStop.current = true
+    recorderRef.current?.stop()
+  }
+  const stopToPreview = () => recorderRef.current?.stop()
+  const stopAndSend = () => {
+    sendOnStop.current = true
+    recorderRef.current?.stop()
+  }
+
+  const canSend = !blocked && !send.isPending
   const handleSend = () => {
     if (!canSend) return
-    const trimmed = text.trim()
-    const reset = () => {
-      setText("")
-      setShowEmoji(false)
+    if (recording) {
+      stopAndSend()
+      return
     }
+    const trimmed = text.trim()
     if (attachment) {
-      // Image/document carry the text as caption; WhatsApp audio has no
-      // caption, so audio + text goes out as TWO messages (audio first) —
-      // never silently dropping what the operator wrote.
-      const isAudio = attachment.kind === "audio"
+      if (attachment.kind === "audio") {
+        sendAudio(attachment.dataUri)
+        return
+      }
+      // Image/document carry the text as caption
       send.mutate(
         {
           type: attachment.kind,
-          text: isAudio ? null : trimmed || null,
+          text: trimmed || null,
           media_data_uri: attachment.dataUri,
           filename: attachment.name ?? null,
         },
         {
           onSuccess: () => {
             setAttachment(null)
-            if (isAudio && trimmed) {
-              // follow-up text; if it fails it stays in the composer
-              send.mutate({ type: "text", text: trimmed }, { onSuccess: reset })
-            } else {
-              reset()
-            }
+            reset()
           },
         }
       )
@@ -397,79 +477,133 @@ function Composer({ contact }: { contact: ContactDetail }) {
         </div>
       )}
 
-      {showEmoji && <EmojiPanel onPick={insertEmoji} />}
-
       <div className="flex items-end gap-1.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={t("conversations.emoji")}
-          disabled={blocked}
-          onClick={() => setShowEmoji(!showEmoji)}
-        >
-          <Smile className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={t("conversations.attach")}
-          disabled={blocked || recording}
-          onClick={() => fileRef.current?.click()}
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={recording ? "destructive" : "ghost"}
-          size="sm"
-          aria-label={
-            recording
-              ? t("conversations.stopRecording")
-              : t("conversations.record")
-          }
-          disabled={blocked}
-          onClick={toggleRecording}
-        >
-          {recording ? (
-            <Square className="h-4 w-4" />
-          ) : (
-            <Mic className="h-4 w-4" />
-          )}
-        </Button>
+        {/* "+" attach menu, WhatsApp style */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t("conversations.attach")}
+              disabled={blocked || recording}
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start">
+            <DropdownMenuItem onSelect={() => imageInputRef.current?.click()}>
+              <ImageIcon className="mr-2 h-4 w-4 text-primary" />
+              {t("conversations.attachPhotos")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => docInputRef.current?.click()}>
+              <FileText className="mr-2 h-4 w-4 text-primary" />
+              {t("conversations.attachDocument")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <input
-          ref={fileRef}
+          ref={imageInputRef}
           type="file"
           hidden
-          accept={ACCEPT_FILES}
-          onChange={onPickFile}
+          accept={IMAGE_ACCEPT}
+          onChange={(e) => onPickFile(e, "image")}
         />
-        <Textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              handleSend()
-            }
-          }}
-          placeholder={
-            blocked
-              ? t("conversations.composerBlocked")
-              : recording
-                ? t("conversations.recording")
+        <input
+          ref={docInputRef}
+          type="file"
+          hidden
+          accept={DOC_ACCEPT}
+          onChange={(e) => onPickFile(e, "document")}
+        />
+
+        {/* Emoji popover anchored to its button, WhatsApp style */}
+        <div className="relative" ref={emojiRef}>
+          <Button
+            variant={showEmoji ? "secondary" : "ghost"}
+            size="sm"
+            aria-label={t("conversations.emoji")}
+            disabled={blocked || recording}
+            onClick={() => setShowEmoji(!showEmoji)}
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+          {showEmoji && (
+            <div className="absolute bottom-full left-0 z-50 mb-2 w-[360px] overflow-hidden rounded-lg border border-border bg-background shadow-xl">
+              <EmojiPanel onPick={insertEmoji} />
+            </div>
+          )}
+        </div>
+
+        {recording ? (
+          /* Recording bar: trash to cancel · red counter · stop for preview */
+          <div className="flex min-h-[42px] flex-1 items-center gap-3 rounded-md border border-input px-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t("conversations.cancelRecording")}
+              onClick={cancelRecording}
+            >
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <span className="flex items-center gap-2 text-sm tabular-nums text-destructive">
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-destructive" />
+              {formatElapsed(elapsed)}
+            </span>
+            <div className="flex-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t("conversations.stopRecording")}
+              onClick={stopToPreview}
+            >
+              <Square className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ) : (
+          <Textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+            placeholder={
+              blocked
+                ? t("conversations.composerBlocked")
                 : t("conversations.composerPlaceholder")
-          }
-          disabled={blocked || send.isPending}
-          rows={2}
-          className="min-h-0 resize-none"
-        />
-        <Button
-          onClick={handleSend}
-          disabled={!canSend || (!text.trim() && !attachment)}
-        >
-          <SendHorizontal className="mr-1 h-4 w-4" />
-          {send.isPending ? t("conversations.sending") : t("conversations.send")}
-        </Button>
+            }
+            disabled={blocked || send.isPending}
+            rows={1}
+            className="min-h-[42px] resize-none"
+          />
+        )}
+
+        {/* WhatsApp behavior: mic when empty, send when there's something */}
+        {recording || text.trim() || attachment ? (
+          <Button
+            size="sm"
+            className="h-[42px] w-[42px] shrink-0 rounded-full p-0"
+            aria-label={t("conversations.send")}
+            onClick={handleSend}
+            disabled={!canSend}
+          >
+            <SendHorizontal className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-[42px] w-[42px] shrink-0 rounded-full p-0"
+            aria-label={t("conversations.record")}
+            onClick={startRecording}
+            disabled={blocked || send.isPending}
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+        )}
       </div>
       {errorText && <p className="mt-2 text-xs text-destructive">{errorText}</p>}
     </div>
