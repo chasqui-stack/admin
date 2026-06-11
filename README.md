@@ -24,7 +24,7 @@ React 19 · TypeScript · Vite · TanStack Query · Tailwind CSS · shadcn/ui ·
 ```bash
 cp .env.example .env     # set API URL (default http://localhost:8090)
 npm install
-npm run dev              # http://localhost:5191
+npm run dev              # http://localhost:5191 (port via VITE_PORT in .env)
 ```
 
 ## i18n
