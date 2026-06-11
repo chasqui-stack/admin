@@ -308,19 +308,31 @@ function Composer({ contact }: { contact: ContactDetail }) {
     const trimmed = text.trim()
     const reset = () => {
       setText("")
-      setAttachment(null)
       setShowEmoji(false)
     }
     if (attachment) {
+      // Image/document carry the text as caption; WhatsApp audio has no
+      // caption, so audio + text goes out as TWO messages (audio first) —
+      // never silently dropping what the operator wrote.
+      const isAudio = attachment.kind === "audio"
       send.mutate(
         {
           type: attachment.kind,
-          // WhatsApp voice notes carry no caption; image/document do
-          text: attachment.kind === "audio" ? null : trimmed || null,
+          text: isAudio ? null : trimmed || null,
           media_data_uri: attachment.dataUri,
           filename: attachment.name ?? null,
         },
-        { onSuccess: reset }
+        {
+          onSuccess: () => {
+            setAttachment(null)
+            if (isAudio && trimmed) {
+              // follow-up text; if it fails it stays in the composer
+              send.mutate({ type: "text", text: trimmed }, { onSuccess: reset })
+            } else {
+              reset()
+            }
+          },
+        }
       )
     } else if (trimmed) {
       send.mutate({ type: "text", text: trimmed }, { onSuccess: reset })
