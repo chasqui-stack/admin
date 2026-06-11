@@ -138,10 +138,19 @@
     "windowClosesIn": "La ventana de 24h de WhatsApp cierra en {{time}}",
     "windowExpired": "Ventana de 24h cerrada — el usuario debe escribir primero para poder responderle",
     "sendError": "No se pudo enviar el mensaje ({{code}})",
+    "emoji": "Emoji",
+    "attach": "Adjuntar archivo",
+    "attachTooLarge": "El archivo supera el límite de {{mb}}MB del canal",
+    "record": "Grabar nota de voz",
+    "stopRecording": "Detener grabación",
+    "recording": "Grabando… pulsa detener para terminar",
+    "micDenied": "Micrófono no disponible o permiso denegado",
+    "removeAttachment": "Quitar adjunto",
     "type": {
       "text": "texto",
       "audio": "audio",
       "image": "imagen",
+      "document": "documento",
       "button": "botón"
     }
   },

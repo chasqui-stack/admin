@@ -138,10 +138,19 @@
     "windowClosesIn": "WhatsApp 24h window closes in {{time}}",
     "windowExpired": "24h window closed — the user must write first before you can reply",
     "sendError": "Could not send the message ({{code}})",
+    "emoji": "Emoji",
+    "attach": "Attach file",
+    "attachTooLarge": "The file exceeds the {{mb}}MB channel limit",
+    "record": "Record voice note",
+    "stopRecording": "Stop recording",
+    "recording": "Recording… press stop to finish",
+    "micDenied": "Microphone unavailable or permission denied",
+    "removeAttachment": "Remove attachment",
     "type": {
       "text": "text",
       "audio": "audio",
       "image": "image",
+      "document": "document",
       "button": "button"
     }
   },

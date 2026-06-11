@@ -98,13 +98,21 @@ export function useSetMode(contactId: string) {
   })
 }
 
+export interface OperatorMessagePayload {
+  type?: "text" | "image" | "document" | "audio"
+  text?: string | null
+  // base64 data: URI — the mirror of the inbound contract (ADR-004)
+  media_data_uri?: string | null
+  filename?: string | null
+}
+
 export function useSendOperatorMessage(contactId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async (payload: OperatorMessagePayload) => {
       const { data } = await apiClient.post<MessageItem>(
         `/admin/contacts/${contactId}/messages`,
-        { text }
+        payload
       )
       return data
     },

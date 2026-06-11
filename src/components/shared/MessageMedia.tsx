@@ -47,7 +47,9 @@ export function MessageMedia({ message }: { message: MessageItem }) {
       className="my-1 flex items-center gap-1 text-xs underline underline-offset-2"
     >
       <ExternalLink className="h-3 w-3" />
-      {t("conversations.mediaOpen")}
+      {typeof message.meta.filename === "string"
+        ? message.meta.filename
+        : t("conversations.mediaOpen")}
     </a>
   )
 }

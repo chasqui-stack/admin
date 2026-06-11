@@ -7,11 +7,17 @@ import {
   Brain,
   Clock,
   FileAudio,
+  FileText,
   Hand,
   Image as ImageIcon,
+  Mic,
   MousePointerClick,
+  Paperclip,
   SendHorizontal,
   Siren,
+  Smile,
+  Square,
+  X,
 } from "lucide-react"
 import {
   useContact,
@@ -57,6 +63,7 @@ function formatRemaining(ms: number): string {
 const TYPE_ICONS: Record<string, typeof FileAudio> = {
   audio: FileAudio,
   image: ImageIcon,
+  document: FileText,
   button: MousePointerClick,
 }
 
@@ -102,17 +109,131 @@ function MessageBubble({ message }: { message: MessageItem }) {
   )
 }
 
+// Curated grid — dependency-free; the OS picker still works on top
+const EMOJIS = [
+  "😀", "😊", "😂", "😉", "😍", "🥰", "😎", "🤔", "😅", "😢",
+  "😡", "🙏", "👍", "👎", "👋", "🤝", "👏", "💪", "🙌", "✌️",
+  "❤️", "💔", "🎉", "🔥", "⭐", "✅", "❌", "⚠️", "📦", "🚚",
+  "💰", "🧾", "📍", "📞", "⏰", "📅", "🛠️", "🤖", "🙋", "🫡",
+]
+
+// Meta's per-type media limits (decoded bytes)
+const MAX_MB: Record<string, number> = { image: 5, document: 25, audio: 16 }
+
+const ACCEPT_FILES =
+  "image/jpeg,image/png,image/webp,application/pdf," +
+  ".doc,.docx,.xls,.xlsx"
+
+interface Attachment {
+  kind: "image" | "document" | "audio"
+  dataUri: string
+  mime: string
+  name?: string
+}
+
 function Composer({ contact }: { contact: ContactDetail }) {
   const { t } = useTranslation()
   const [text, setText] = useState("")
+  const [attachment, setAttachment] = useState<Attachment | null>(null)
+  const [showEmoji, setShowEmoji] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
   const send = useSendOperatorMessage(contact.id)
   const window = whatsappWindow(contact)
   const blocked = window !== null && !window.open
 
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current
+    const start = el?.selectionStart ?? text.length
+    const end = el?.selectionEnd ?? text.length
+    setText(text.slice(0, start) + emoji + text.slice(end))
+    requestAnimationFrame(() => {
+      if (!el) return
+      el.focus()
+      el.selectionStart = el.selectionEnd = start + emoji.length
+    })
+  }
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    const kind = file.type.startsWith("image/") ? "image" : "document"
+    if (file.size > MAX_MB[kind] * 1024 * 1024) {
+      setLocalError(t("conversations.attachTooLarge", { mb: MAX_MB[kind] }))
+      return
+    }
+    setLocalError(null)
+    const reader = new FileReader()
+    reader.onload = () =>
+      setAttachment({
+        kind,
+        dataUri: reader.result as string,
+        mime: file.type,
+        name: file.name,
+      })
+    reader.readAsDataURL(file)
+  }
+
+  const toggleRecording = async () => {
+    if (recording) {
+      recorderRef.current?.stop()
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Meta doesn't accept webm — prefer mp4/AAC (Chrome 126+, Safari)
+      const mime = MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "audio/webm"
+      const recorder = new MediaRecorder(stream, { mimeType: mime })
+      const chunks: Blob[] = []
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size) chunks.push(ev.data)
+      }
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop())
+        const reader = new FileReader()
+        reader.onload = () =>
+          setAttachment({ kind: "audio", dataUri: reader.result as string, mime })
+        reader.readAsDataURL(new Blob(chunks, { type: mime }))
+        setRecording(false)
+      }
+      recorderRef.current = recorder
+      recorder.start()
+      setRecording(true)
+      setLocalError(null)
+    } catch {
+      setLocalError(t("conversations.micDenied"))
+    }
+  }
+
+  const canSend = !blocked && !send.isPending && !recording
   const handleSend = () => {
+    if (!canSend) return
     const trimmed = text.trim()
-    if (!trimmed || send.isPending || blocked) return
-    send.mutate(trimmed, { onSuccess: () => setText("") })
+    const reset = () => {
+      setText("")
+      setAttachment(null)
+      setShowEmoji(false)
+    }
+    if (attachment) {
+      send.mutate(
+        {
+          type: attachment.kind,
+          // WhatsApp voice notes carry no caption; image/document do
+          text: attachment.kind === "audio" ? null : trimmed || null,
+          media_data_uri: attachment.dataUri,
+          filename: attachment.name ?? null,
+        },
+        { onSuccess: reset }
+      )
+    } else if (trimmed) {
+      send.mutate({ type: "text", text: trimmed }, { onSuccess: reset })
+    }
   }
 
   // Gateway error codes travel in detail.code (ADR-004)
@@ -124,7 +245,7 @@ function Composer({ contact }: { contact: ContactDetail }) {
     ? errorCode === "WINDOW_EXPIRED"
       ? t("conversations.windowExpired")
       : t("conversations.sendError", { code: errorCode ?? "" })
-    : null
+    : localError
 
   return (
     <div className="border-t border-border p-3">
@@ -143,8 +264,96 @@ function Composer({ contact }: { contact: ContactDetail }) {
             : t("conversations.windowExpired")}
         </p>
       )}
-      <div className="flex items-end gap-2">
+
+      {attachment && (
+        <div className="mb-2 flex items-center gap-2 rounded-md border border-border p-2">
+          {attachment.kind === "image" ? (
+            <img
+              src={attachment.dataUri}
+              alt={attachment.name ?? t("conversations.mediaImageAlt")}
+              className="h-12 w-12 rounded object-cover"
+            />
+          ) : attachment.kind === "audio" ? (
+            <audio controls src={attachment.dataUri} className="h-9 w-56" />
+          ) : (
+            <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+          )}
+          {attachment.name && (
+            <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+              {attachment.name}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={t("conversations.removeAttachment")}
+            onClick={() => setAttachment(null)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {showEmoji && (
+        <div className="mb-2 flex flex-wrap gap-1 rounded-md border border-border p-2">
+          {EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              className="rounded p-1 text-lg leading-none hover:bg-accent"
+              onClick={() => insertEmoji(emoji)}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-end gap-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("conversations.emoji")}
+          disabled={blocked}
+          onClick={() => setShowEmoji(!showEmoji)}
+        >
+          <Smile className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("conversations.attach")}
+          disabled={blocked || recording}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={recording ? "destructive" : "ghost"}
+          size="sm"
+          aria-label={
+            recording
+              ? t("conversations.stopRecording")
+              : t("conversations.record")
+          }
+          disabled={blocked}
+          onClick={toggleRecording}
+        >
+          {recording ? (
+            <Square className="h-4 w-4" />
+          ) : (
+            <Mic className="h-4 w-4" />
+          )}
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          hidden
+          accept={ACCEPT_FILES}
+          onChange={onPickFile}
+        />
         <Textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -156,7 +365,9 @@ function Composer({ contact }: { contact: ContactDetail }) {
           placeholder={
             blocked
               ? t("conversations.composerBlocked")
-              : t("conversations.composerPlaceholder")
+              : recording
+                ? t("conversations.recording")
+                : t("conversations.composerPlaceholder")
           }
           disabled={blocked || send.isPending}
           rows={2}
@@ -164,7 +375,7 @@ function Composer({ contact }: { contact: ContactDetail }) {
         />
         <Button
           onClick={handleSend}
-          disabled={blocked || send.isPending || !text.trim()}
+          disabled={!canSend || (!text.trim() && !attachment)}
         >
           <SendHorizontal className="mr-1 h-4 w-4" />
           {send.isPending ? t("conversations.sending") : t("conversations.send")}
@@ -195,18 +406,28 @@ export function ConversationDetailPage() {
   const timeline = [...(messages?.items ?? [])].reverse()
   const hasOlder = (messages?.total ?? 0) > (messages?.items.length ?? 0)
 
-  // Pin the scroll to the newest message on first load (and contact switch);
-  // "load older" grows upward without yanking the view to the bottom.
+  // Pin the scroll to the newest message on first load (and contact switch).
+  // While pinned near the bottom, FOLLOW new messages (own sends + polled
+  // inbound); "load older" grows upward without yanking the view down.
   const scrollRef = useRef<HTMLDivElement>(null)
   const newestId = messages?.items[0]?.id
   const pinnedFor = useRef<string | null>(null)
+  const atBottom = useRef(true)
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  }
   useEffect(() => {
     const el = scrollRef.current
     if (!el || newestId === undefined) return
     if (pinnedFor.current !== contactId) {
       pinnedFor.current = contactId
+      atBottom.current = true
       el.scrollTop = el.scrollHeight
+      return
     }
+    if (atBottom.current) el.scrollTop = el.scrollHeight
   }, [newestId, contactId])
 
   return (
@@ -271,6 +492,7 @@ export function ConversationDetailPage() {
         <Card className="flex h-[calc(100vh-15rem)] min-h-[320px] flex-col overflow-hidden">
           <CardContent
             ref={scrollRef}
+            onScroll={handleScroll}
             className="flex-1 overflow-y-auto pt-6"
           >
             {isLoading ? (
