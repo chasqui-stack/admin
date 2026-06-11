@@ -185,10 +185,14 @@ function Composer({ contact }: { contact: ContactDetail }) {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      // Meta doesn't accept webm — prefer mp4/AAC (Chrome 126+, Safari)
-      const mime = MediaRecorder.isTypeSupported("audio/mp4")
-        ? "audio/mp4"
-        : "audio/webm"
+      // WhatsApp accepts AAC (m4a) or Opus-in-OGG only. Ask for AAC
+      // explicitly — Chrome's bare "audio/mp4" muxes OPUS into MP4, which
+      // Meta rejects asynchronously. Opus fallbacks get remuxed to OGG by
+      // the gateway (ffmpeg) before hitting Meta.
+      const mime =
+        ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/webm'].find((m) =>
+          MediaRecorder.isTypeSupported(m)
+        ) ?? "audio/webm"
       const recorder = new MediaRecorder(stream, { mimeType: mime })
       const chunks: Blob[] = []
       recorder.ondataavailable = (ev) => {
@@ -429,6 +433,21 @@ export function ConversationDetailPage() {
     }
     if (atBottom.current) el.scrollTop = el.scrollHeight
   }, [newestId, contactId])
+
+  // Media loads AFTER the message renders (presigned URL fetch + lazy <img>),
+  // growing the content under an already-positioned scroll — re-anchor on any
+  // content growth while pinned, or the view stays cut off mid-image.
+  const contentRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scrollRef.current
+    const content = contentRef.current
+    if (!el || !content) return
+    const observer = new ResizeObserver(() => {
+      if (atBottom.current) el.scrollTop = el.scrollHeight
+    })
+    observer.observe(content)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div className="space-y-6">
