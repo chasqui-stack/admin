@@ -1,14 +1,15 @@
-# Name of your application. Used to uniquely configure containers.
-service: saas-template-admin
+# Kamal 2 deploy config — Chasqui admin panel (static SPA build).
+# Placeholders to replace per project: registry username, server IP, host.
+service: chasqui-admin
 
 # Name of the container image.
-image: your-username/saas-template-admin
+image: your-username/chasqui-admin
 
 # Deploy to these servers.
 servers:
   web:
     hosts:
-      - 34.134.60.186
+      - 203.0.113.10 # your server IP
 
 registry:
   username: your-username
@@ -27,6 +28,9 @@ ssh:
 
 builder:
   arch: amd64
+  # VITE_* vars are baked into the bundle at BUILD time, not at runtime.
+  args:
+    VITE_API_BASE_URL: "https://api.example.com"
 
 proxy:
   ssl: true
