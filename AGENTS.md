@@ -4,7 +4,7 @@ The **operator panel** for Chasqui: edit prompts, manage the FAQ knowledge base,
 
 ## ⚠️ Design
 
-**Read [`DESIGN.md`](./DESIGN.md) (repo root) BEFORE writing any UI.** It is the design sheet (Sentry-inspired tokens: violet-midnight canvas `#150f23`, electric-lime accent `#c2ef4e`, Rubik / Monaco). Match its colors, typography, and component style.
+**Read [`DESIGN.md`](./DESIGN.md) (repo root) BEFORE writing any UI.** It is the design sheet (Chasqui brand tokens: warm neutrals + single amber accent `#EA9B27`, terracotta `#C94B22` = destructive, charcoal `#1C1917` chrome; Rubik / Monaco). Match its colors, typography, and component style — colors ONLY via the CSS tokens in `src/index.css`.
 
 ## Stack
 

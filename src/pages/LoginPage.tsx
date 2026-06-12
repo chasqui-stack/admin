@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Building2, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -43,9 +43,11 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Building2 className="h-6 w-6" />
-          </div>
+          <img
+            src="/chasqui-icon.svg"
+            alt="Chasqui"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl"
+          />
           <CardTitle className="text-2xl">{t("login.title")}</CardTitle>
           <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>

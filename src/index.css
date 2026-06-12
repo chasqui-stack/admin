@@ -49,78 +49,80 @@
 
 :root {
   --radius: 0.625rem;
-  /* Sentry-inspired palette — violet-midnight canvas + electric lime (DESIGN.md) */
-  --brand: #c2ef4e;
-  --brand-foreground: #150f23;
+  /* Chasqui brand palette (DESIGN.md + parent docs/assets/brand): warm
+     neutrals derived from the mark — amber #EA9B27 is THE accent,
+     terracotta #C94B22 is destructive/attention, charcoal #1C1917 is ink. */
+  --brand: #ea9b27;
+  --brand-foreground: #1c1917;
 
-  --background: #f7f6fb;
-  --foreground: #1f1633;
+  --background: #f8f5ee;
+  --foreground: #221c16;
   --card: #ffffff;
-  --card-foreground: #1f1633;
+  --card-foreground: #221c16;
   --popover: #ffffff;
-  --popover-foreground: #1f1633;
-  --primary: #150f23;
-  --primary-foreground: #ffffff;
-  --secondary: #f0eef6;
-  --secondary-foreground: #1f1633;
-  --muted: #efeef4;
-  --muted-foreground: #6c6385;
-  --accent: #ece9f6;
-  --accent-foreground: #150f23;
-  --destructive: #e5484d;
+  --popover-foreground: #221c16;
+  --primary: #1c1917;
+  --primary-foreground: #f7f1e5;
+  --secondary: #f1ebdf;
+  --secondary-foreground: #221c16;
+  --muted: #f0eae0;
+  --muted-foreground: #786a58;
+  --accent: #f5e9d2;
+  --accent-foreground: #1c1917;
+  --destructive: #c94b22;
   --destructive-foreground: #ffffff;
-  --border: #e6e3ef;
-  --input: #e0dcea;
-  --ring: #9dc1f5;
+  --border: #e6decf;
+  --input: #dfd6c4;
+  --ring: #ea9b27;
   /* Status colors */
   --success: oklch(0.65 0.15 145);
   --warning: oklch(0.75 0.15 85);
   --info: oklch(0.60 0.15 250);
-  /* Sidebar — dark violet-midnight chrome with a lime active state */
-  --sidebar: #150f23;
-  --sidebar-foreground: #cfcadb;
-  --sidebar-primary: #c2ef4e;
-  --sidebar-primary-foreground: #150f23;
-  --sidebar-accent: #c2ef4e;
-  --sidebar-accent-foreground: #150f23;
-  --sidebar-border: #362d59;
-  --sidebar-ring: #c2ef4e;
+  /* Sidebar — charcoal chrome (the mark's canvas) with an amber active state */
+  --sidebar: #1c1917;
+  --sidebar-foreground: #d8cfc2;
+  --sidebar-primary: #ea9b27;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #ea9b27;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #3a322a;
+  --sidebar-ring: #ea9b27;
 }
 
 .dark {
-  --brand: #c2ef4e;
-  --brand-foreground: #150f23;
+  --brand: #ea9b27;
+  --brand-foreground: #1c1917;
 
-  --background: #150f23;
-  --foreground: #f4f2f8;
-  --card: #1f1633;
-  --card-foreground: #f4f2f8;
-  --popover: #1f1633;
-  --popover-foreground: #f4f2f8;
-  --primary: #c2ef4e;
-  --primary-foreground: #150f23;
-  --secondary: #2a2140;
-  --secondary-foreground: #e6e3ef;
-  --muted: #251c3b;
-  --muted-foreground: #bdb8c0;
-  --accent: #2d2447;
-  --accent-foreground: #f4f2f8;
-  --destructive: #ff6b6b;
-  --destructive-foreground: #150f23;
-  --border: #362d59;
-  --input: #362d59;
-  --ring: #9dc1f5;
+  --background: #1c1917;
+  --foreground: #f3ede3;
+  --card: #262019;
+  --card-foreground: #f3ede3;
+  --popover: #262019;
+  --popover-foreground: #f3ede3;
+  --primary: #ea9b27;
+  --primary-foreground: #1c1917;
+  --secondary: #322a21;
+  --secondary-foreground: #ede6da;
+  --muted: #2b241c;
+  --muted-foreground: #b5ab9c;
+  --accent: #383021;
+  --accent-foreground: #f3ede3;
+  --destructive: #e0633c;
+  --destructive-foreground: #1c1917;
+  --border: #3a322a;
+  --input: #3a322a;
+  --ring: #ea9b27;
   --success: oklch(0.70 0.15 145);
   --warning: oklch(0.80 0.15 85);
   --info: oklch(0.65 0.15 250);
-  --sidebar: #120c1d;
-  --sidebar-foreground: #cfcadb;
-  --sidebar-primary: #c2ef4e;
-  --sidebar-primary-foreground: #150f23;
-  --sidebar-accent: #c2ef4e;
-  --sidebar-accent-foreground: #150f23;
-  --sidebar-border: #362d59;
-  --sidebar-ring: #c2ef4e;
+  --sidebar: #161210;
+  --sidebar-foreground: #d8cfc2;
+  --sidebar-primary: #ea9b27;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #ea9b27;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #3a322a;
+  --sidebar-ring: #ea9b27;
 }
 
 @layer base {

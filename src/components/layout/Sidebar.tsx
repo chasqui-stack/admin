@@ -28,8 +28,9 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-        <span className="text-lg font-semibold text-sidebar-foreground">Chasqui</span>
+      <div className="flex h-14 items-center border-b border-sidebar-border px-3">
+        {/* The lockup SVG carries the same charcoal canvas as --sidebar: seamless */}
+        <img src="/chasqui-logo.svg" alt="Chasqui" className="h-9" />
       </div>
       <nav className="flex-1 space-y-1 p-2">
         {navigation.map((item) => {
