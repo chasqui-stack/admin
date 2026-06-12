@@ -1,6 +1,6 @@
 # Chasqui Admin
 
-React + Vite admin panel for [Chasqui](https://github.com/chasqui-stack/chasqui), the open-source stack for building WhatsApp AI agents.
+React + Vite admin panel for [Chasqui](https://github.com/chasqui-stack/chasqui), the open-source stack for building custom AI chat agents (WhatsApp first; more channels on the roadmap).
 
 The operator panel: edit agent prompts, manage the FAQ knowledge base (RAG), enable/configure tools, and inspect conversations. A SPA that talks directly to the [core](https://github.com/chasqui-stack/core) REST API. Admins only — end users never access it.
 
@@ -30,7 +30,7 @@ npm run dev              # http://localhost:5191 (port via VITE_PORT in .env)
 ## i18n
 
 The UI is fully bilingual (es/en) via `react-i18next` with JSON locales
-(`src/locales/{en,es}.json` — the React analog of Rails' `config/locales/*.yml`).
+(`src/locales/{en,es}.json`).
 
 - **HARD RULE: no hardcoded UI strings** — every user-visible literal goes
   through `t()`. A vitest guard enforces key parity between locales.
