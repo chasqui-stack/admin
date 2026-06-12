@@ -47,7 +47,7 @@
   },
   "dashboard": {
     "title": "Chasqui",
-    "subtitle": "Configura tu agente de IA para WhatsApp.",
+    "subtitle": "Configura tu agente de IA.",
     "promptCard": "Edita el system prompt, la persona y las reglas del agente.",
     "faqCard": "Gestiona la base de conocimiento desde la que responde el agente.",
     "toolsCard": "Activa y configura las herramientas del agente.",
