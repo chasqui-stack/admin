@@ -78,6 +78,10 @@
   --success: oklch(0.65 0.15 145);
   --warning: oklch(0.75 0.15 85);
   --info: oklch(0.60 0.15 250);
+  /* Channel brand accents — used ONLY as subtle badge tints + the brand glyph
+     color (category chips, not part of the single-amber CTA hierarchy). */
+  --channel-whatsapp: #1faa55;
+  --channel-telegram: #229ed9;
   /* Sidebar — charcoal chrome (the mark's canvas) with an amber active state */
   --sidebar: #1c1917;
   --sidebar-foreground: #d8cfc2;
@@ -115,6 +119,9 @@
   --success: oklch(0.70 0.15 145);
   --warning: oklch(0.80 0.15 85);
   --info: oklch(0.65 0.15 250);
+  /* Channel brand accents (brighter for dark surfaces) */
+  --channel-whatsapp: #25d366;
+  --channel-telegram: #3aa9e0;
   --sidebar: #161210;
   --sidebar-foreground: #d8cfc2;
   --sidebar-primary: #ea9b27;

@@ -21,7 +21,7 @@ import type {
 export const INBOX_POLL_MS = 5000
 
 export function useContacts(
-  params: PaginationParams & { mode?: ConversationMode },
+  params: PaginationParams & { mode?: ConversationMode; channel?: string },
   options?: { poll?: boolean }
 ) {
   return useQuery({

@@ -126,6 +126,8 @@
     "mediaOpen": "Open file",
     "filterAll": "All",
     "filterHuman": "Needs human",
+    "filterChannelAll": "All channels",
+    "channel": { "whatsapp": "WhatsApp", "telegram": "Telegram" },
     "emptyHuman": "No conversations waiting for a human. 🎉",
     "needsHuman": "Needs human",
     "handoffReason": "Handoff: {{reason}}",

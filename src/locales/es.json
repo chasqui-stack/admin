@@ -126,6 +126,8 @@
     "mediaOpen": "Abrir archivo",
     "filterAll": "Todas",
     "filterHuman": "Atención humana",
+    "filterChannelAll": "Todos los canales",
+    "channel": { "whatsapp": "WhatsApp", "telegram": "Telegram" },
     "emptyHuman": "No hay conversaciones esperando a un humano. 🎉",
     "needsHuman": "Atención humana",
     "handoffReason": "Derivada: {{reason}}",

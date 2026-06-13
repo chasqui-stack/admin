@@ -38,6 +38,7 @@ import {
 import type { ContactDetail, MessageItem } from "@/types/api"
 import { MessageMedia } from "@/components/shared/MessageMedia"
 import { Badge } from "@/components/ui/badge"
+import { ChannelBadge } from "@/components/shared/ChannelBadge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -689,6 +690,7 @@ export function ConversationDetailPage() {
             <h1 className="text-2xl font-semibold">
               {contact?.display_name ?? contact?.external_id ?? "…"}
             </h1>
+            {contact?.channel && <ChannelBadge channel={contact.channel} />}
             {isHuman && (
               <Badge variant="destructive">
                 <Siren className="mr-1 h-3 w-3" />
@@ -697,7 +699,7 @@ export function ConversationDetailPage() {
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {contact?.channel} · {contact?.external_id}
+            {contact?.external_id}
             {contact?.wa_id ? ` · ${contact.wa_id}` : ""}
           </p>
           {isHuman && contact?.handoff_reason && (

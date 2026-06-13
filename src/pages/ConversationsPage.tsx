@@ -7,12 +7,16 @@ import type { ContactListItem } from "@/types/api"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ChannelBadge, channelIcon } from "@/components/shared/ChannelBadge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Pagination } from "@/components/shared/Pagination"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { cn } from "@/lib/utils"
 
 const PAGE_SIZE = 25
+
+// Live channels offered as filter chips (others still render via ChannelBadge).
+const CHANNEL_FILTERS = ["whatsapp", "telegram"] as const
 
 function initials(contact: ContactListItem): string {
   const name = contact.display_name ?? contact.external_id
@@ -30,11 +34,13 @@ export function ConversationsPage() {
   const [page, setPage] = useState(1)
   const [searchParams, setSearchParams] = useSearchParams()
   const humanOnly = searchParams.get("mode") === "human"
+  const channel = searchParams.get("channel") ?? undefined
 
   const { data, isLoading } = useContacts(
     {
       search: search || undefined,
       mode: humanOnly ? "human" : undefined,
+      channel,
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
     },
@@ -45,8 +51,14 @@ export function ConversationsPage() {
 
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
 
-  const setFilter = (human: boolean) => {
-    setSearchParams(human ? { mode: "human" } : {})
+  // Mode and channel filters coexist in the query string.
+  const updateParams = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(searchParams)
+    for (const [key, value] of Object.entries(patch)) {
+      if (value) next.set(key, value)
+      else next.delete(key)
+    }
+    setSearchParams(next)
     setPage(1)
   }
 
@@ -62,14 +74,14 @@ export function ConversationsPage() {
           <Button
             variant={humanOnly ? "ghost" : "secondary"}
             size="sm"
-            onClick={() => setFilter(false)}
+            onClick={() => updateParams({ mode: null })}
           >
             {t("conversations.filterAll")}
           </Button>
           <Button
             variant={humanOnly ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => setFilter(true)}
+            onClick={() => updateParams({ mode: "human" })}
           >
             <Siren className="mr-1 h-3.5 w-3.5" />
             {t("conversations.filterHuman")}
@@ -79,6 +91,30 @@ export function ConversationsPage() {
               </Badge>
             )}
           </Button>
+        </div>
+
+        <div className="flex gap-1 rounded-md border border-border p-1">
+          <Button
+            variant={channel ? "ghost" : "secondary"}
+            size="sm"
+            onClick={() => updateParams({ channel: null })}
+          >
+            {t("conversations.filterChannelAll")}
+          </Button>
+          {CHANNEL_FILTERS.map((ch) => {
+            const Icon = channelIcon(ch)
+            return (
+              <Button
+                key={ch}
+                variant={channel === ch ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => updateParams({ channel: ch })}
+              >
+                {Icon && <Icon className="mr-1 h-3.5 w-3.5" />}
+                {t(`conversations.channel.${ch}`)}
+              </Button>
+            )
+          })}
         </div>
         <div className="max-w-sm flex-1">
           <SearchInput
@@ -129,9 +165,7 @@ export function ConversationsPage() {
                             {t("conversations.needsHuman")}
                           </Badge>
                         )}
-                        <Badge variant="outline" className="shrink-0 text-xs">
-                          {contact.channel}
-                        </Badge>
+                        <ChannelBadge channel={contact.channel} />
                         <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
                           {contact.wa_id ?? contact.external_id}
                         </span>
