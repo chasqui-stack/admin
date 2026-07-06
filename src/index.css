@@ -43,7 +43,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: "Rubik", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Manrope", "Avenir Next", sans-serif;
   --font-mono: "Monaco", "SFMono-Regular", ui-monospace, monospace;
 }
 
@@ -52,10 +52,10 @@
   /* Chasqui brand palette (DESIGN.md + parent docs/assets/brand): warm
      neutrals derived from the mark — amber #EA9B27 is THE accent,
      terracotta #C94B22 is destructive/attention, charcoal #1C1917 is ink. */
-  --brand: #ea9b27;
+  --brand: #2563eb;
   --brand-foreground: #1c1917;
 
-  --background: #f8f5ee;
+  --background: #f8fafc;
   --foreground: #221c16;
   --card: #ffffff;
   --card-foreground: #221c16;
@@ -73,7 +73,7 @@
   --destructive-foreground: #ffffff;
   --border: #e6decf;
   --input: #dfd6c4;
-  --ring: #ea9b27;
+  --ring: #2563eb;
   /* Status colors */
   --success: oklch(0.65 0.15 145);
   --warning: oklch(0.75 0.15 85);
@@ -81,14 +81,13 @@
   /* Channel brand accents — used ONLY as subtle badge tints + the brand glyph
      color (category chips, not part of the single-amber CTA hierarchy). */
   --channel-whatsapp: #1faa55;
-  --channel-telegram: #229ed9;
   /* Sidebar — charcoal chrome (the mark's canvas) with an amber active state */
-  --sidebar: #1c1917;
+  --sidebar: #0f172a;
   --sidebar-foreground: #d8cfc2;
   --sidebar-primary: #ea9b27;
   --sidebar-primary-foreground: #1c1917;
-  --sidebar-accent: #ea9b27;
-  --sidebar-accent-foreground: #1c1917;
+  --sidebar-accent: #2563eb;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #3a322a;
   --sidebar-ring: #ea9b27;
 }
@@ -121,7 +120,6 @@
   --info: oklch(0.65 0.15 250);
   /* Channel brand accents (brighter for dark surfaces) */
   --channel-whatsapp: #25d366;
-  --channel-telegram: #3aa9e0;
   --sidebar: #161210;
   --sidebar-foreground: #d8cfc2;
   --sidebar-primary: #ea9b27;
@@ -152,4 +150,12 @@
   [role="tab"]:not([data-disabled]) {
     cursor: pointer;
   }
+}
+
+.chat-wallpaper {
+  background-color: #efeae2;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.34) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 80% 65%, rgba(15,23,42,.045) 0 1px, transparent 1.5px);
+  background-size: 24px 24px, 32px 32px;
 }

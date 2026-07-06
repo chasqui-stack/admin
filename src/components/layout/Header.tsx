@@ -1,4 +1,4 @@
-import { Languages, LogOut, User } from "lucide-react"
+import { Languages, LogOut, Sparkles, User } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useAdminAuth, useAdminLogout } from "@/hooks/useAdminAuth"
 import { Button } from "@/components/ui/button"
@@ -46,7 +46,7 @@ function LanguageSwitcher() {
   )
 }
 
-export function Header() {
+export function Header({ copilotOpen, onToggleCopilot }: { copilotOpen: boolean; onToggleCopilot: () => void }) {
   const { t } = useTranslation()
   const { data: admin } = useAdminAuth()
   const logout = useAdminLogout()
@@ -62,6 +62,17 @@ export function Header() {
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
       <div />
       <div className="flex items-center gap-2">
+        <Button
+          variant={copilotOpen ? "secondary" : "ghost"}
+          size="sm"
+          onClick={onToggleCopilot}
+          className="gap-2"
+          aria-pressed={copilotOpen}
+          aria-label={copilotOpen ? "Cerrar copiloto" : "Abrir copiloto"}
+        >
+          <Sparkles className="h-4 w-4 text-blue-600" />
+          <span className="hidden text-xs font-semibold sm:inline">Copiloto</span>
+        </Button>
         <LanguageSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

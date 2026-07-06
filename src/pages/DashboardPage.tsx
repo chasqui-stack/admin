@@ -1,71 +1,42 @@
-import { Link } from "react-router-dom"
-import { useTranslation } from "react-i18next"
+import { useState } from "react"
+import { ArrowDownRight, ArrowUpRight, CalendarDays, Clock3, Download, Filter, MessageCircle, PhoneCall, Presentation, TimerReset, TrendingUp, UserRound } from "lucide-react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, MessageSquare, Siren, Sparkles, UserPlus, Wrench } from "lucide-react"
-import { useContacts } from "@/hooks/useContacts"
+import { Input } from "@/components/ui/input"
 
-const sections = [
-  { titleKey: "nav.prompt", descriptionKey: "dashboard.promptCard", href: "/prompt", icon: Sparkles },
-  { titleKey: "nav.faq", descriptionKey: "dashboard.faqCard", href: "/faq", icon: BookOpen },
-  { titleKey: "nav.tools", descriptionKey: "dashboard.toolsCard", href: "/tools", icon: Wrench },
-  { titleKey: "nav.conversations", descriptionKey: "dashboard.conversationsCard", href: "/conversations", icon: MessageSquare },
-  { titleKey: "nav.leads", descriptionKey: "dashboard.leadsCard", href: "/leads", icon: UserPlus },
-]
+const daily = [18,22,19,31,27,35,38,34,42,47,45,54,51,61]
+const monthly = [286,304,331,358,392,429,471,508,556,603,648,714]
+const hourly = [2,1,0,0,0,1,3,7,14,22,29,25,21,28,31,34,27,24,19,16,12,9,5,3]
+const sellers = [{name:"Ana",chats:96,response:"1m 18s"},{name:"Carlos",chats:78,response:"1m 42s"},{name:"María",chats:64,response:"2m 06s"},{name:"Sin asignar",chats:21,response:"4m 31s"}]
 
 export function DashboardPage() {
-  const { t } = useTranslation()
-  // Conversations waiting for a human (polls — the dashboard is the lobby)
-  const { data: humanCount } = useContacts({ mode: "human", limit: 1 }, { poll: true })
-  const waiting = humanCount?.total ?? 0
+  const [from,setFrom] = useState("2026-06-21")
+  const [to,setTo] = useState("2026-07-04")
+  const [seller,setSeller] = useState("Todos")
+  return <div className="space-y-7 p-2 lg:p-4">
+    <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between"><div><p className="mb-2 text-xs font-bold uppercase tracking-[.22em] text-blue-600">Inteligencia comercial</p><h1 className="text-4xl font-semibold tracking-[-.04em]">Reportes</h1><p className="mt-2 text-muted-foreground">Crecimiento, velocidad de atención y avance de cada conversación hacia ventas.</p></div><div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white p-2 shadow-sm"><CalendarDays className="ml-2 h-4 w-4 text-slate-400"/><Input aria-label="Fecha inicial" type="date" value={from} onChange={e=>setFrom(e.target.value)} className="h-9 w-36 border-0 bg-slate-50"/><span className="text-xs text-slate-400">a</span><Input aria-label="Fecha final" type="date" value={to} onChange={e=>setTo(e.target.value)} className="h-9 w-36 border-0 bg-slate-50"/><select aria-label="Filtrar vendedor" className="h-9 rounded-md border-0 bg-slate-50 px-3 text-sm" value={seller} onChange={e=>setSeller(e.target.value)}><option>Todos</option><option>Ana</option><option>Carlos</option><option>María</option></select><Button size="sm" variant="outline" onClick={()=>toast.success("Filtros aplicados")}><Filter className="mr-2 h-3.5 w-3.5"/>Aplicar</Button><Button size="sm" variant="ghost" onClick={()=>toast.info("La exportación se habilitará con el backend de reportes")}><Download className="h-4 w-4"/></Button></div></header>
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("dashboard.title")}</h1>
-        <p className="text-muted-foreground">{t("dashboard.subtitle")}</p>
-      </div>
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><Kpi icon={MessageCircle} label="Chats nuevos" value="429" change="+18.4%" positive/><Kpi icon={Clock3} label="Primera respuesta" value="1m 46s" change="-22s" positive/><Kpi icon={TimerReset} label="Chat → CRM" value="3m 12s" change="-14.2%" positive/><Kpi icon={PhoneCall} label="Solicitaron llamada" value="67" change="+11.7%" positive/><Kpi icon={Presentation} label="Solicitaron demo" value="43" change="+24.6%" positive/></section>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Link to="/conversations?mode=human">
-          <Card
-            className={
-              waiting > 0
-                ? "h-full border-destructive/50 transition-colors hover:border-destructive"
-                : "h-full transition-colors hover:border-primary/50"
-            }
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t("dashboard.humanCount")}
-              </CardTitle>
-              <Siren
-                className={
-                  waiting > 0 ? "h-4 w-4 text-destructive" : "h-4 w-4 text-muted-foreground"
-                }
-              />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{waiting}</p>
-              <p className="text-xs text-muted-foreground">
-                {t("dashboard.humanCountCard")}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-        {sections.map((s) => (
-          <Link key={s.titleKey} to={s.href}>
-            <Card className="h-full transition-colors hover:border-primary/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{t(s.titleKey)}</CardTitle>
-                <s.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs text-muted-foreground">{t(s.descriptionKey)}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
+    <section className="grid gap-5 xl:grid-cols-2">
+      <ReportCard title="Chats nuevos por día" subtitle="X: día · Y: cantidad de chats nuevos" action={<span className="flex items-center gap-1 text-xs font-semibold text-emerald-700"><TrendingUp className="h-3.5 w-3.5"/>+32.8% crecimiento</span>}><LineChart data={daily} labels={["21 jun","24 jun","27 jun","30 jun","4 jul"]}/></ReportCard>
+      <ReportCard title="Chats nuevos mes a mes" subtitle="X: mes · Y: cantidad de chats nuevos" action={<span className="flex items-center gap-1 text-xs font-semibold text-emerald-700"><TrendingUp className="h-3.5 w-3.5"/>+149.7% anual</span>}><LineChart data={monthly} labels={["Ago","Oct","Dic","Feb","Abr","Jul"]} accent="#0f9f75"/></ReportCard>
+      <ReportCard title="Intención comercial" subtitle="Clientes que solicitaron una acción"><div className="space-y-5 pt-3"><Intent label="Solicitaron llamada" value={67} total={110} color="bg-blue-600"/><Intent label="Solicitaron demo" value={43} total={110} color="bg-emerald-500"/><div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">Conversión desde chats nuevos</p><p className="mt-1 text-3xl font-bold tracking-tight">25.6%</p><p className="mt-1 text-xs font-semibold text-emerald-700">+4.1 puntos vs. periodo anterior</p></div></div></ReportCard>
+    </section>
+
+    <section className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+      <ReportCard title="Chats nuevos por hora" subtitle="Distribución agregada para identificar horas pico"><div className="flex h-52 items-end gap-1 pt-6">{hourly.map((value,index)=><div key={index} className="group relative flex h-full flex-1 items-end"><div className="w-full rounded-t-sm bg-blue-500/80 transition-all hover:bg-blue-600" style={{height:`${Math.max(4,(value/34)*100)}%`}}/><span className="pointer-events-none absolute -top-2 left-1/2 hidden -translate-x-1/2 rounded bg-slate-950 px-2 py-1 text-[10px] text-white group-hover:block">{index}:00 · {value}</span></div>)}</div><div className="mt-2 flex justify-between text-[10px] text-slate-400"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span></div><p className="mt-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Hora pico: 15:00–17:00. Conviene reforzar vendedores disponibles en esa franja.</p></ReportCard>
+      <ReportCard title="Chats por vendedor" subtitle="Carga asignada y velocidad de primera respuesta"><div className="overflow-hidden rounded-xl border"><table className="w-full text-sm"><thead className="bg-slate-50 text-left text-[10px] uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Usuario</th><th className="px-4 py-3">Chats</th><th className="px-4 py-3">Distribución</th><th className="px-4 py-3">Respuesta</th></tr></thead><tbody>{sellers.map(row=><tr key={row.name} className="border-t"><td className="px-4 py-3 font-semibold"><span className="mr-2 inline-grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-[10px]">{row.name.slice(0,2).toUpperCase()}</span>{row.name}</td><td className="px-4 py-3 tabular-nums">{row.chats}</td><td className="w-36 px-4 py-3"><div className="h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600" style={{width:`${row.chats}%`}}/></div></td><td className="px-4 py-3 tabular-nums text-slate-600">{row.response}</td></tr>)}</tbody></table></div></ReportCard>
+    </section>
+
+    <section className="grid gap-5 xl:grid-cols-3"><Stage title="Chat iniciado" value="429" detail="100%" color="bg-blue-600"/><Stage title="Enviado al CRM" value="382" detail="89.0% · mediana 3m 12s" color="bg-cyan-500"/><Stage title="Acción comercial" value="110" detail="25.6% llamada o demo" color="bg-emerald-500"/></section>
+    <p className="text-right text-[11px] text-slate-400">Datos de demostración. Los filtros y métricas reales se conectarán al backend y al CRM.</p>
+  </div>
 }
+
+function Kpi({icon:Icon,label,value,change,positive}:{icon:typeof MessageCircle;label:string;value:string;change:string;positive:boolean}) { return <Card className="border-0 shadow-[0_6px_24px_rgba(15,23,42,.06)]"><CardContent className="p-5"><div className="flex items-start justify-between"><span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-white"><Icon className="h-4 w-4"/></span><span className={`flex items-center text-xs font-bold ${positive?"text-emerald-700":"text-red-600"}`}>{positive?<ArrowUpRight className="h-3.5 w-3.5"/>:<ArrowDownRight className="h-3.5 w-3.5"/>}{change}</span></div><p className="mt-5 text-2xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-slate-500">{label}</p></CardContent></Card> }
+function ReportCard({title,subtitle,action,children}:{title:string;subtitle:string;action?:React.ReactNode;children:React.ReactNode}) { return <Card className="border-0 shadow-[0_8px_30px_rgba(15,23,42,.06)]"><CardHeader className="flex-row items-start justify-between"><div><CardTitle className="text-base">{title}</CardTitle><p className="mt-1 text-xs text-slate-500">{subtitle}</p></div>{action}</CardHeader><CardContent>{children}</CardContent></Card> }
+function LineChart({data,labels,accent="#2563eb"}:{data:number[];labels:string[];accent?:string}) { const w=700,h=240,left=52,bottom=28,top=14,plotW=w-left-8,plotH=h-bottom-top,max=Math.ceil(Math.max(...data)/10)*10,points=data.map((v,i)=>`${left+(i/(data.length-1))*plotW},${top+plotH-(v/max)*plotH}`).join(" "),ticks=[0,.25,.5,.75,1]; return <svg viewBox={`0 0 ${w} ${h}`} className="h-64 w-full overflow-visible" role="img" aria-label="Cantidad de chats por periodo"><defs><linearGradient id={`area-${accent.replace("#","")}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={accent} stopOpacity=".24"/><stop offset="1" stopColor={accent} stopOpacity="0"/></linearGradient></defs>{ticks.map(t=>{const y=top+plotH-(t*plotH);return <g key={t}><line x1={left} x2={w-8} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="4 5"/><text x={left-10} y={y+4} textAnchor="end" fontSize="10" fill="#64748b">{Math.round(max*t)}</text></g>})}<line x1={left} x2={left} y1={top} y2={top+plotH} stroke="#94a3b8"/><line x1={left} x2={w-8} y1={top+plotH} y2={top+plotH} stroke="#94a3b8"/><polygon points={`${left},${top+plotH} ${points} ${w-8},${top+plotH}`} fill={`url(#area-${accent.replace("#","")})`}/><polyline points={points} fill="none" stroke={accent} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>{labels.map((label,i)=><text key={label} x={left+(i/(labels.length-1))*plotW} y={h-5} textAnchor={i===0?"start":i===labels.length-1?"end":"middle"} fontSize="10" fill="#64748b">{label}</text>)}<text x="13" y={top+plotH/2} transform={`rotate(-90 13 ${top+plotH/2})`} textAnchor="middle" fontSize="10" fontWeight="600" fill="#475569">Cantidad de chats</text></svg> }
+function Intent({label,value,total,color}:{label:string;value:number;total:number;color:string}) { return <div><div className="mb-2 flex justify-between text-sm"><span className="font-medium">{label}</span><span className="font-bold">{value}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${color}`} style={{width:`${(value/total)*100}%`}}/></div></div> }
+function Stage({title,value,detail,color}:{title:string;value:string;detail:string;color:string}) { return <div className="relative overflow-hidden rounded-2xl border bg-white p-5"><span className={`absolute inset-y-0 left-0 w-1.5 ${color}`}/><div className="flex items-center justify-between"><div><p className="text-xs font-semibold text-slate-500">{title}</p><p className="mt-2 text-3xl font-bold">{value}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></div><UserRound className="h-8 w-8 text-slate-200"/></div></div> }

@@ -1,214 +1,93 @@
-import { useState } from "react"
-import { Link, useSearchParams } from "react-router-dom"
-import { useTranslation } from "react-i18next"
-import { ChevronRight, MessageSquare, Siren } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Archive, ArrowDown, ArrowUp, Bot, CheckCheck, ChevronDown, CircleUserRound, Columns3, Filter, GripVertical, List, MessageCircle, Mic, MoreVertical, Paperclip, PanelRightClose, Pencil, Plus, Search, Send, Settings2, Smile, Sparkles, Table2, Tag, Trash2, UserRound, Users } from "lucide-react"
+import { toast } from "sonner"
 import { useContacts } from "@/hooks/useContacts"
-import type { ContactListItem } from "@/types/api"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChannelBadge, channelIcon } from "@/components/shared/ChannelBadge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Pagination } from "@/components/shared/Pagination"
-import { SearchInput } from "@/components/shared/SearchInput"
+import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { SdrPipelineView } from "@/components/leads/SdrPipelineView"
 
-const PAGE_SIZE = 25
+type Chat = { id:string; name:string; phone:string; preview:string; time:string; unread:number; owner:string; mode:"agent"|"human"; labels:string[] }
+const demoChats: Chat[] = [
+  { id:"demo-1", name:"Cliente de ejemplo", phone:"+1 305 555 0184", preview:"Quisiera conocer los planes disponibles", time:"10:42", unread:2, owner:"Sin asignar", mode:"human", labels:["Lead caliente"] },
+  { id:"demo-2", name:"Prospecto demo", phone:"+1 786 555 0120", preview:"Gracias, quedo atento a la cotización", time:"09:18", unread:0, owner:"Vendedor demo", mode:"agent", labels:["Seguimiento"] },
+]
 
-// Live channels offered as filter chips (others still render via ChannelBadge).
-const CHANNEL_FILTERS = ["whatsapp", "telegram"] as const
-
-function initials(contact: ContactListItem): string {
-  const name = contact.display_name ?? contact.external_id
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
-}
+const demoMessages = [
+  { id:1, incoming:true, text:"Hola, vi su información y quisiera conocer los planes disponibles.", time:"10:38" },
+  { id:2, incoming:false, text:"¡Hola! Con gusto te ayudo. ¿Buscas una solución para tu empresa o para uso personal?", time:"10:39" },
+  { id:3, incoming:true, text:"Para mi empresa. Somos un equipo de 8 vendedores y atendemos por WhatsApp.", time:"10:41" },
+  { id:4, incoming:false, text:"Perfecto. Para recomendarte el plan correcto, ¿aproximadamente cuántas conversaciones reciben al día?", time:"10:42" },
+]
 
 export function ConversationsPage() {
-  const { t, i18n } = useTranslation()
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const humanOnly = searchParams.get("mode") === "human"
-  const channel = searchParams.get("channel") ?? undefined
+  const [search,setSearch] = useState("")
+  const [selectedId,setSelectedId] = useState("demo-1")
+  const [message,setMessage] = useState("")
+  const [showInfo,setShowInfo] = useState(true)
+  const [view,setView] = useState<"whatsapp"|"table"|"pipeline">("whatsapp")
+  const { data } = useContacts({ channel:"whatsapp", limit:50 }, { poll:true })
+  const chats = useMemo<Chat[]>(()=>{
+    if (data?.items.length) return data.items.map(item=>({id:item.id,name:item.display_name??item.external_id,phone:item.wa_id??item.external_id,preview:item.last_message?.text??"Sin mensajes",time:item.last_message?new Date(item.last_message.created_at+"Z").toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"",unread:0,owner:item.mode==="human"?"Atención humana":"Agente IA",mode:item.mode,labels:[]}))
+    return import.meta.env.DEV ? demoChats : []
+  },[data])
+  const filtered = chats.filter(chat=>(chat.name+chat.phone+chat.preview).toLowerCase().includes(search.toLowerCase()))
+  const selected = chats.find(chat=>chat.id===selectedId) ?? chats[0]
+  const send = () => { if(!message.trim()) return; toast.success("Mensaje preparado en la vista de demostración"); setMessage("") }
 
-  const { data, isLoading } = useContacts(
-    {
-      search: search || undefined,
-      mode: humanOnly ? "human" : undefined,
-      channel,
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
-    },
-    { poll: true }
-  )
-  // Waiting-for-human counter for the tab badge (cheap: total only)
-  const { data: humanCount } = useContacts({ mode: "human", limit: 1 }, { poll: true })
+  return <div className="-m-6 flex h-[calc(100vh-3.5rem)] min-h-[620px] flex-col overflow-hidden bg-[#efeae2]">
+    <div className="flex h-14 shrink-0 items-center justify-between border-b bg-white px-4"><div className="flex h-full items-center gap-1"><ViewTab icon={MessageCircle} label="WhatsApp" active={view==="whatsapp"} onClick={()=>setView("whatsapp")}/><ViewTab icon={Table2} label="Tabla" active={view==="table"} onClick={()=>setView("table")}/><ViewTab icon={Columns3} label="Embudo" active={view==="pipeline"} onClick={()=>setView("pipeline")}/></div><p className="hidden text-xs text-slate-500 md:block">{view==="whatsapp"?"Atender conversaciones":view==="table"?"Administración masiva":"Proceso comercial"}</p></div>
+    {view==="whatsapp"&&<div className="flex min-h-0 flex-1">
+    <section className="flex w-[360px] shrink-0 flex-col border-r border-slate-200 bg-white">
+      <div className="flex h-16 items-center justify-between bg-[#f0f2f5] px-4"><div><p className="font-semibold">WhatsApp</p><p className="text-[11px] text-slate-500">Bandeja de conversaciones</p></div><div className="flex"><Button variant="ghost" size="icon"><Users className="h-5 w-5"/></Button><Button variant="ghost" size="icon"><MessageCircle className="h-5 w-5"/></Button><Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5"/></Button></div></div>
+      <div className="border-b bg-white p-3"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"/><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar o iniciar un chat" className="border-0 bg-[#f0f2f5] pl-10 shadow-none"/></div><div className="mt-2 flex gap-2 overflow-x-auto"><Chip active>Todos</Chip><Chip>Sin leer</Chip><Chip>Asignados a mí</Chip><Button variant="ghost" size="sm" className="h-7 px-2"><Filter className="h-3.5 w-3.5"/></Button></div></div>
+      <div className="flex-1 overflow-y-auto">{filtered.length?filtered.map(chat=><button key={chat.id} onClick={()=>setSelectedId(chat.id)} className={cn("flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors hover:bg-[#f5f6f6]",selected?.id===chat.id&&"bg-[#f0f2f5]")}><Avatar className="h-12 w-12 shrink-0"><AvatarFallback className="bg-gradient-to-br from-slate-300 to-slate-400 text-white">{chat.name.slice(0,2).toUpperCase()}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><p className="truncate font-medium text-slate-900">{chat.name}</p><span className={cn("text-[11px]",chat.unread&&"font-semibold text-[#00a884]")}>{chat.time}</span></div><div className="mt-0.5 flex items-center gap-1"><CheckCheck className="h-3.5 w-3.5 shrink-0 text-sky-500"/><p className="truncate text-xs text-slate-500">{chat.preview}</p>{chat.unread>0&&<span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-[#25d366] px-1 text-[10px] font-bold text-white">{chat.unread}</span>}</div>{chat.labels[0]&&<span className="mt-1.5 inline-flex rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">{chat.labels[0]}</span>}</div></button>):<div className="p-8 text-center text-sm text-slate-500">No hay conversaciones de WhatsApp.</div>}</div>
+    </section>
 
-  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
+    <section className="flex min-w-0 flex-1 flex-col">
+      {selected?<><header className="flex h-16 items-center justify-between border-b border-slate-200 bg-[#f0f2f5] px-4"><button className="flex min-w-0 items-center gap-3 text-left" onClick={()=>setShowInfo(true)}><Avatar className="h-10 w-10"><AvatarFallback className="bg-slate-400 text-white">{selected.name.slice(0,2).toUpperCase()}</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate text-sm font-semibold">{selected.name}</p><p className="truncate text-xs text-slate-500">{selected.phone} · {selected.mode==="agent"?"Atendido por IA":"Atención humana"}</p></div></button><div className="flex"><Button variant="ghost" size="icon"><Search className="h-5 w-5"/></Button><Button variant="ghost" size="icon" onClick={()=>setShowInfo(v=>!v)}><PanelRightClose className="h-5 w-5"/></Button><Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5"/></Button></div></header>
+        <div className="chat-wallpaper flex-1 overflow-y-auto px-5 py-6 lg:px-12"><div className="mx-auto max-w-3xl"><div className="mx-auto mb-5 w-fit rounded-lg bg-[#ffeecd] px-3 py-1.5 text-center text-[11px] text-slate-600 shadow-sm">HOY</div>{selected.id.startsWith("demo")?demoMessages.map(item=><div key={item.id} className={cn("mb-2 flex",item.incoming?"justify-start":"justify-end")}><div className={cn("relative max-w-[78%] rounded-lg px-3 py-2 text-[13px] shadow-sm",item.incoming?"rounded-tl-none bg-white":"rounded-tr-none bg-[#d9fdd3]")}><p className="pr-10 leading-relaxed">{item.text}</p><span className="absolute bottom-1.5 right-2 flex items-center gap-0.5 text-[10px] text-slate-500">{item.time}{!item.incoming&&<CheckCheck className="h-3.5 w-3.5 text-sky-500"/>}</span></div></div>):<div className="grid h-64 place-items-center text-sm text-slate-500">Abre el detalle para cargar el historial.</div>}</div></div>
+        <footer className="border-t border-slate-200 bg-[#f0f2f5] p-3"><div className="flex items-end gap-2"><Button variant="ghost" size="icon"><Smile className="h-5 w-5 text-slate-600"/></Button><Button variant="ghost" size="icon"><Paperclip className="h-5 w-5 text-slate-600"/></Button><div className="flex-1"><Input value={message} onChange={e=>setMessage(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Escribe un mensaje" className="h-11 rounded-lg border-0 bg-white shadow-none"/></div>{message.trim()?<Button size="icon" onClick={send} className="rounded-full bg-[#00a884] text-white hover:bg-[#008f72]"><Send className="h-4 w-4"/></Button>:<Button variant="ghost" size="icon"><Mic className="h-5 w-5 text-slate-600"/></Button>}</div></footer></>:<div className="grid h-full place-items-center text-slate-500">Selecciona una conversación</div>}
+    </section>
 
-  // Mode and channel filters coexist in the query string.
-  const updateParams = (patch: Record<string, string | null>) => {
-    const next = new URLSearchParams(searchParams)
-    for (const [key, value] of Object.entries(patch)) {
-      if (value) next.set(key, value)
-      else next.delete(key)
-    }
-    setSearchParams(next)
-    setPage(1)
-  }
+    {showInfo&&selected&&<aside className="hidden w-[300px] shrink-0 overflow-y-auto border-l bg-white xl:block"><div className="flex h-16 items-center justify-between border-b px-5"><p className="font-semibold">Datos del contacto</p><Button variant="ghost" size="icon" onClick={()=>setShowInfo(false)}><PanelRightClose className="h-4 w-4"/></Button></div><div className="border-b p-6 text-center"><Avatar className="mx-auto h-20 w-20"><AvatarFallback className="bg-slate-300 text-xl text-white">{selected.name.slice(0,2).toUpperCase()}</AvatarFallback></Avatar><h3 className="mt-3 font-semibold">{selected.name}</h3><p className="text-sm text-slate-500">{selected.phone}</p></div><InfoBlock icon={UserRound} title="Responsable" value={selected.owner}/><InfoBlock icon={Bot} title="Agente" value="Lía Ventas"/><InfoBlock icon={Tag} title="Etiquetas" value={selected.labels.join(", ")||"Sin etiquetas"}/><div className="border-b p-5"><p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Acciones comerciales</p><div className="space-y-2"><Action icon={Sparkles} text="Generar resumen con IA"/><Action icon={CircleUserRound} text="Asignar vendedor"/><Action icon={Archive} text="Archivar conversación"/></div></div><div className="p-5"><p className="text-[11px] text-slate-500">{selected.id.startsWith("demo")?"Datos de demostración visibles solo en desarrollo.":"Información sincronizada con el contacto."}</p></div></aside>}
+    </div>}
+    {view==="table"&&<TableView chats={chats} total={data?.total??chats.length}/>} 
+    {view==="pipeline"&&<SdrPipelineView chats={chats}/>} 
+  </div>
+}
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("conversations.title")}</h1>
-        <p className="text-muted-foreground">{t("conversations.subtitle")}</p>
-      </div>
+function Chip({children,active=false}:{children:React.ReactNode;active?:boolean}) { return <button className={cn("whitespace-nowrap rounded-full border px-3 py-1 text-[11px]",active?"border-[#00a884] bg-[#e7fce8] text-[#08775f]":"bg-white text-slate-600")}>{children}</button> }
+function InfoBlock({icon:Icon,title,value}:{icon:typeof UserRound;title:string;value:string}) { return <div className="flex gap-3 border-b p-5"><Icon className="mt-0.5 h-4 w-4 text-slate-500"/><div><p className="text-xs text-slate-500">{title}</p><p className="mt-0.5 text-sm font-medium">{value}</p></div></div> }
+function Action({icon:Icon,text}:{icon:typeof Sparkles;text:string}) { return <button onClick={()=>toast.info(`${text}: disponible al conectar el backend`)} className="flex w-full items-center gap-3 rounded-lg p-2 text-left text-sm hover:bg-slate-50"><Icon className="h-4 w-4 text-blue-600"/>{text}<ChevronDown className="ml-auto h-3.5 w-3.5 -rotate-90 text-slate-400"/></button> }
+function ViewTab({icon:Icon,label,active,onClick}:{icon:typeof List;label:string;active:boolean;onClick:()=>void}) { return <button onClick={onClick} className={cn("relative flex h-full items-center gap-2 px-4 text-sm font-semibold",active?"text-blue-700":"text-slate-500 hover:text-slate-900")}>{<Icon className="h-4 w-4"/>}{label}{active&&<span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-blue-600"/>}</button> }
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-md border border-border p-1">
-          <Button
-            variant={humanOnly ? "ghost" : "secondary"}
-            size="sm"
-            onClick={() => updateParams({ mode: null })}
-          >
-            {t("conversations.filterAll")}
-          </Button>
-          <Button
-            variant={humanOnly ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => updateParams({ mode: "human" })}
-          >
-            <Siren className="mr-1 h-3.5 w-3.5" />
-            {t("conversations.filterHuman")}
-            {(humanCount?.total ?? 0) > 0 && (
-              <Badge variant="destructive" className="ml-1.5 px-1.5 text-[10px]">
-                {humanCount?.total}
-              </Badge>
-            )}
-          </Button>
-        </div>
+function TableView({chats,total}:{chats:Chat[];total:number}) {
+  const [selected,setSelected] = useState<string[]>([])
+  const [allResults,setAllResults] = useState(false)
+  const all = chats.length>0&&selected.length===chats.length
+  const selectionCount = allResults?total:selected.length
+  const toggleAll = () => { setAllResults(false); setSelected(all?[]:chats.map(chat=>chat.id)) }
+  return <div className="min-h-0 flex-1 overflow-auto bg-white p-5"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">Tabla de conversaciones</h2><p className="text-xs text-slate-500">Edita cada celda directamente o selecciona varias filas.</p></div><div className="flex gap-2"><Button variant="outline"><Filter className="mr-2 h-4 w-4"/>Filtros</Button><Button><Plus className="mr-2 h-4 w-4"/>Nuevo chat</Button></div></div>
+    {selectionCount>0&&<div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-2"><div className="flex flex-wrap items-center gap-2"><span className="px-2 text-xs font-semibold text-blue-800">{selectionCount} seleccionados{allResults?" · tabla completa":""}</span><BulkSelect placeholder="Cambiar etapa…" options={["Nuevo","Calificado","Propuesta","Ganado"]}/><BulkSelect placeholder="Asignar owner…" options={["Ana","Carlos","María","Sin asignar"]}/><BulkSelect placeholder="Gestionar etiqueta…" options={["+ Lead caliente","+ Seguimiento","+ Cliente","– Quitar etiquetas"]}/><BulkSelect placeholder="Tipo de atención…" options={["Agente IA","Atención humana"]}/><BulkSelect placeholder="Más acciones…" options={["Archivar conversaciones","Marcar como leído","Sincronizar con CRM"]}/><Button size="sm" onClick={()=>toast.success(`${selectionCount} conversaciones actualizadas`)}>Aplicar cambios</Button><Button size="sm" variant="ghost" onClick={()=>{setSelected([]);setAllResults(false)}}>Cancelar</Button></div><p className="mt-2 px-2 text-[10px] text-blue-700">Solo se modificarán los campos elegidos; los demás datos se conservarán.</p></div>}
+    <div className="overflow-auto border bg-white"><div className="flex items-center justify-between border-b bg-slate-50 px-4 py-2"><span className="text-sm font-semibold">{total} conversaciones</span><DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline">Seleccionar <ChevronDown className="ml-2 h-3.5 w-3.5"/></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-64"><DropdownMenuItem onClick={()=>{setAllResults(false);setSelected(chats.map(chat=>chat.id))}}>Todos los visibles ({chats.length})</DropdownMenuItem><DropdownMenuItem onClick={()=>{setAllResults(true);setSelected(chats.map(chat=>chat.id))}}>Todos los {total} registros de la tabla</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div><table className="w-full min-w-[1100px] border-collapse text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-600"><tr><Cell head className="w-12 text-center"><input type="checkbox" checked={all} onChange={toggleAll}/></Cell><Cell head className="w-12"/><Cell head>Contacto</Cell><Cell head>Teléfono</Cell><Cell head>Etapa</Cell><Cell head>Owner</Cell><Cell head>Etiqueta</Cell><Cell head>Atención</Cell><Cell head>Último mensaje</Cell><Cell head>Hora</Cell></tr></thead><tbody>{chats.map(chat=><tr key={chat.id} className={cn("hover:bg-blue-50/30",(allResults||selected.includes(chat.id))&&"bg-blue-50")}><Cell className="text-center"><input type="checkbox" checked={allResults||selected.includes(chat.id)} onChange={()=>{setAllResults(false);setSelected(items=>items.includes(chat.id)?items.filter(id=>id!==chat.id):[...items,chat.id])}}/></Cell><Cell className="text-center"><button className="rounded p-1.5 text-slate-500 hover:bg-slate-100"><Pencil className="h-4 w-4"/></button></Cell><Cell><span className="font-semibold">{chat.name}</span></Cell><Cell><span className="text-slate-600">{chat.phone}</span></Cell><Cell><GridSelect value="Nuevo" options={["Nuevo","Calificado","Propuesta","Ganado"]}/></Cell><Cell><GridSelect value={chat.owner} options={[chat.owner,"Ana","Carlos","María"]}/></Cell><Cell><GridSelect value={chat.labels[0]??"Sin etiqueta"} options={[chat.labels[0]??"Sin etiqueta","Lead caliente","Seguimiento","Cliente"]}/></Cell><Cell><GridSelect value={chat.mode==="human"?"Humana":"Agente IA"} options={["Humana","Agente IA"]}/></Cell><Cell className="max-w-[260px]"><p className="truncate text-slate-600">{chat.preview}</p></Cell><Cell><span className="text-slate-500">{chat.time}</span></Cell></tr>)}</tbody></table></div></div>
+}
 
-        <div className="flex gap-1 rounded-md border border-border p-1">
-          <Button
-            variant={channel ? "ghost" : "secondary"}
-            size="sm"
-            onClick={() => updateParams({ channel: null })}
-          >
-            {t("conversations.filterChannelAll")}
-          </Button>
-          {CHANNEL_FILTERS.map((ch) => {
-            const Icon = channelIcon(ch)
-            return (
-              <Button
-                key={ch}
-                variant={channel === ch ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => updateParams({ channel: ch })}
-              >
-                {Icon && <Icon className="mr-1 h-3.5 w-3.5" />}
-                {t(`conversations.channel.${ch}`)}
-              </Button>
-            )
-          })}
-        </div>
-        <div className="max-w-sm flex-1">
-          <SearchInput
-            value={search}
-            onChange={(value) => {
-              setSearch(value)
-              setPage(1)
-            }}
-            placeholder={t("conversations.searchPlaceholder")}
-          />
-        </div>
-      </div>
+function Cell({head=false,className,children}:{head?:boolean;className?:string;children?:React.ReactNode}) { const TagName=head?"th":"td"; return <TagName className={cn("h-12 border-b border-r border-slate-200 px-3 last:border-r-0",head&&"h-11 font-semibold",className)}>{children}</TagName> }
+function GridSelect({value,options}:{value:string;options:string[]}) { return <select defaultValue={value} className="h-9 w-full min-w-28 cursor-pointer bg-transparent pr-2 text-sm outline-none hover:text-blue-700">{Array.from(new Set(options)).map(option=><option key={option}>{option}</option>)}</select> }
+function BulkSelect({placeholder,options}:{placeholder:string;options:string[]}) { return <select defaultValue="" className="h-8 rounded-md border bg-white px-2 text-xs"><option value="">{placeholder}</option>{options.map(option=><option key={option}>{option}</option>)}</select> }
 
-      <Card>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <p className="text-muted-foreground">{t("common.loading")}</p>
-          ) : !data?.items.length ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              {humanOnly
-                ? t("conversations.emptyHuman")
-                : t("conversations.empty")}
-            </p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {data.items.map((contact) => (
-                <li key={contact.id}>
-                  <Link
-                    to={`/conversations/${contact.id}`}
-                    className={cn(
-                      "flex items-center gap-4 py-3 transition-colors hover:bg-accent/50",
-                      contact.mode === "human" && "bg-destructive/5"
-                    )}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {initials(contact)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate font-medium">
-                          {contact.display_name ?? contact.external_id}
-                        </p>
-                        {contact.mode === "human" && (
-                          <Badge variant="destructive" className="shrink-0 text-xs">
-                            <Siren className="mr-1 h-3 w-3" />
-                            {t("conversations.needsHuman")}
-                          </Badge>
-                        )}
-                        <ChannelBadge channel={contact.channel} />
-                        <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
-                          {contact.wa_id ?? contact.external_id}
-                        </span>
-                      </div>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {contact.mode === "human" && contact.handoff_reason
-                          ? t("conversations.handoffReason", {
-                              reason: contact.handoff_reason,
-                            })
-                          : (contact.last_message?.text ??
-                            (contact.last_message
-                              ? t(`conversations.type.${contact.last_message.type}`, {
-                                  defaultValue: contact.last_message.type,
-                                })
-                              : t("conversations.noMessages")))}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {t("conversations.messages", { count: contact.message_count })}
-                      </span>
-                      {contact.last_message && (
-                        <span>
-                          {new Date(
-                            contact.last_message.created_at + "Z"
-                          ).toLocaleDateString(i18n.language)}
-                        </span>
-                      )}
-                      <ChevronRight className="h-4 w-4" />
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          {totalPages > 1 && (
-            <div className="mt-4">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
+export function PipelineView({chats}:{chats:Chat[]}) {
+  const [editorOpen,setEditorOpen] = useState(false)
+  const [deleteId,setDeleteId] = useState<string|null>(null)
+  const [moveToId,setMoveToId] = useState("")
+  const [stages,setStages] = useState([{id:"new",name:"Nuevo",color:"#3b82f6"},{id:"qualified",name:"Calificado",color:"#8b5cf6"},{id:"proposal",name:"Propuesta",color:"#f59e0b"},{id:"won",name:"Ganado",color:"#10b981"}])
+  const add = () => setStages(items=>[...items,{id:String(Date.now()),name:`Nueva etapa ${items.length+1}`,color:"#64748b"}])
+  const move = (index:number,direction:-1|1) => setStages(items=>{ const target=index+direction; if(target<0||target>=items.length) return items; const next=[...items]; [next[index],next[target]]=[next[target],next[index]]; return next })
+  const requestDelete = (id:string) => { const fallback=stages.find(stage=>stage.id!==id)?.id??""; setDeleteId(id); setMoveToId(fallback) }
+  const remove = () => { if(!deleteId||!moveToId) return; const removed=stages.find(stage=>stage.id===deleteId); setStages(items=>items.filter(stage=>stage.id!==deleteId)); setDeleteId(null); toast.success(`Etapa “${removed?.name}” eliminada; sus conversaciones se moverán a la etapa seleccionada`) }
+  return <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-5"><div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-xl font-semibold">Embudo de conversaciones</h2><p className="text-xs text-slate-500">Organiza cada chat por etapa y personaliza tu proceso comercial.</p></div><Dialog open={editorOpen} onOpenChange={open=>{setEditorOpen(open);if(!open)setDeleteId(null)}}><DialogTrigger asChild><Button><Settings2 className="mr-2 h-4 w-4"/>Editar embudo</Button></DialogTrigger><DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>Editar embudo</DialogTitle><DialogDescription>Agrega, renombra, ordena o elimina las etapas de tu proceso comercial.</DialogDescription></DialogHeader><div className="space-y-3 py-2">{stages.map((stage,index)=><div key={stage.id} className="rounded-xl border bg-white p-3"><div className="flex items-center gap-2"><input type="color" aria-label={`Color de ${stage.name}`} value={stage.color} onChange={e=>setStages(items=>items.map(item=>item.id===stage.id?{...item,color:e.target.value}:item))} className="h-9 w-9 cursor-pointer rounded border bg-white p-1"/><Input aria-label="Nombre de etapa" value={stage.name} onChange={e=>setStages(items=>items.map(item=>item.id===stage.id?{...item,name:e.target.value}:item))} className="flex-1"/><Button variant="ghost" size="icon" disabled={index===0} onClick={()=>move(index,-1)} aria-label="Mover etapa hacia arriba"><ArrowUp className="h-4 w-4"/></Button><Button variant="ghost" size="icon" disabled={index===stages.length-1} onClick={()=>move(index,1)} aria-label="Mover etapa hacia abajo"><ArrowDown className="h-4 w-4"/></Button><Button variant="ghost" size="icon" disabled={stages.length===1} onClick={()=>requestDelete(stage.id)} className="text-red-600 hover:bg-red-50 hover:text-red-700" aria-label="Eliminar etapa"><Trash2 className="h-4 w-4"/></Button></div>{deleteId===stage.id&&<div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3"><p className="text-sm font-semibold text-red-900">¿Eliminar “{stage.name}”?</p><p className="mt-1 text-xs text-red-700">Las conversaciones no se perderán. Selecciona la etapa a la que deben moverse.</p><div className="mt-3 flex flex-wrap gap-2"><select value={moveToId} onChange={e=>setMoveToId(e.target.value)} className="h-9 flex-1 rounded-md border bg-white px-3 text-sm">{stages.filter(item=>item.id!==stage.id).map(item=><option key={item.id} value={item.id}>Mover a: {item.name}</option>)}</select><Button variant="destructive" size="sm" onClick={remove}>Eliminar etapa</Button><Button variant="outline" size="sm" onClick={()=>setDeleteId(null)}>Cancelar</Button></div></div>}</div>)}</div><div className="flex items-center justify-between border-t pt-4"><Button variant="outline" onClick={add}><Plus className="mr-2 h-4 w-4"/>Agregar etapa</Button><Button onClick={()=>{setEditorOpen(false);setDeleteId(null);toast.success("Configuración del embudo guardada")}}>Guardar cambios</Button></div></DialogContent></Dialog></div><div className="flex min-w-max gap-4 pb-4">{stages.map((stage,index)=><section key={stage.id} className="w-72 rounded-xl border bg-slate-50"><header className="flex items-center gap-2 border-b p-3"><span className="h-2.5 w-2.5 rounded-full" style={{background:stage.color}}/><p className="min-w-0 flex-1 truncate text-sm font-semibold">{stage.name}</p><span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-slate-500">{index===0?chats.length:0}</span></header><div className="min-h-[430px] space-y-3 p-3">{index===0&&chats.map(chat=><article key={chat.id} className="group rounded-xl border bg-white p-3 shadow-sm hover:shadow-md"><div className="mb-2 flex items-center gap-2"><GripVertical className="h-4 w-4 cursor-grab text-slate-300"/><p className="min-w-0 flex-1 truncate text-sm font-semibold">{chat.name}</p><span className="text-[10px] text-slate-400">{chat.time}</span></div><p className="line-clamp-2 text-xs text-slate-500">{chat.preview}</p><div className="mt-3 flex items-center justify-between"><span className="text-[10px] font-medium text-blue-700">{chat.owner}</span>{chat.labels[0]&&<span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] text-amber-700">{chat.labels[0]}</span>}</div></article>)}</div></section>)}</div><p className="text-[11px] text-slate-400">El movimiento entre etapas y la sincronización con el CRM se habilitarán con el backend.</p></div>
 }

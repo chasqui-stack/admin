@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom"
+import { createBrowserRouter, Navigate } from "react-router-dom"
 import { AdminLayout } from "@/components/layout/AdminLayout"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import {
@@ -10,6 +10,9 @@ import {
   LoginPage,
   PromptPage,
   ToolsPage,
+  AgentsPage,
+  SettingsPage,
+  UsersPage,
 } from "@/pages"
 
 export const router = createBrowserRouter([
@@ -25,13 +28,17 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <Navigate to="/conversations" replace /> },
+      { path: "dashboard", element: <DashboardPage /> },
+      { path: "agents", element: <AgentsPage /> },
       { path: "prompt", element: <PromptPage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "tools", element: <ToolsPage /> },
       { path: "conversations", element: <ConversationsPage /> },
       { path: "conversations/:contactId", element: <ConversationDetailPage /> },
       { path: "leads", element: <LeadsPage /> },
+      { path: "settings", element: <SettingsPage /> },
+      { path: "users", element: <UsersPage /> },
     ],
   },
 ])

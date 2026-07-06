@@ -1,5 +1,5 @@
 import type { IconType } from "react-icons"
-import { SiTelegram, SiWhatsapp } from "react-icons/si"
+import { SiWhatsapp } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils"
 // Unknown channels fall back to a neutral outline badge.
 const CHANNELS: Record<string, { Icon: IconType; token: string }> = {
   whatsapp: { Icon: SiWhatsapp, token: "--channel-whatsapp" },
-  telegram: { Icon: SiTelegram, token: "--channel-telegram" },
 }
 
 export function channelIcon(channel: string): IconType | null {

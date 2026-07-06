@@ -11,6 +11,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation()
   const { data: admin, isLoading, isError } = useAdminAuth()
 
+  // Local product preview only. Production always requires a valid JWT.
+  if (import.meta.env.DEV) return <>{children}</>
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
