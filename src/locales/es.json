@@ -23,6 +23,7 @@
     "dashboard": "Panel",
     "prompt": "Prompt",
     "faq": "FAQ / RAG",
+    "knowledge": "Documentos",
     "tools": "Herramientas",
     "conversations": "Conversaciones",
     "leads": "Leads"
@@ -99,6 +100,53 @@
       "noResults": "Sin coincidencias — el agente respondería honestamente que no lo sabe."
     }
   },
+  "knowledge": {
+    "title": "Base de conocimiento de documentos",
+    "subtitle": "Documentos que el agente puede consultar — manuales, catálogos, políticas. Para respuestas cortas y curadas, usa las FAQ.",
+    "dropzone": {
+      "title": "Suelta archivos aquí, o haz clic para elegirlos",
+      "uploading": "Subiendo…",
+      "hint": "{{types}} · hasta {{size}} cada uno"
+    },
+    "columns": {
+      "document": "Documento",
+      "type": "Tipo",
+      "size": "Tamaño",
+      "status": "Estado",
+      "chunks": "Fragmentos",
+      "uploaded": "Subido"
+    },
+    "status": {
+      "uploading": "Subiendo",
+      "pending": "En cola",
+      "processing": "Procesando",
+      "ready": "Indexado",
+      "error": "Error"
+    },
+    "rejected": {
+      "unsupported": "\"{{filename}}\" no es un tipo soportado (pdf, docx, txt, md, html)",
+      "tooLarge": "\"{{filename}}\" supera el límite de 10 MB",
+      "empty": "\"{{filename}}\" está vacío",
+      "duplicate": "\"{{filename}}\" ya fue subido",
+      "failed": "No se pudo subir \"{{filename}}\" — inténtalo de nuevo"
+    },
+    "reprocess": "Reprocesar",
+    "reprocessStarted": "Reprocesamiento iniciado",
+    "reprocessError": "No se pudo reprocesar — si sigue fallando, elimina el documento y súbelo de nuevo",
+    "deleted": "Documento eliminado",
+    "deleteTitle": "¿Eliminar documento?",
+    "deleteConfirm": "\"{{filename}}\" y su contenido indexado se eliminarán. El agente ya no responderá a partir de él.",
+    "empty": "Aún no hay documentos. Sube el primero para que el agente pueda responder a partir de él.",
+    "preview": {
+      "title": "Vista previa de búsqueda",
+      "subtitle": "Mira qué pasajes recuperaría el agente para una consulta, con sus puntajes.",
+      "placeholder": "ej. condiciones de garantía",
+      "run": "Probar",
+      "chunk": "pasaje {{seq}}",
+      "similarity": "similitud",
+      "noResults": "No se encontraron pasajes — ningún documento indexado cubre esta consulta."
+    }
+  },
   "tools": {
     "title": "Herramientas",
     "subtitle": "Activa, desactiva y configura las herramientas del agente por módulo.",
@@ -127,7 +175,10 @@
     "filterAll": "Todas",
     "filterHuman": "Atención humana",
     "filterChannelAll": "Todos los canales",
-    "channel": { "whatsapp": "WhatsApp", "telegram": "Telegram" },
+    "channel": {
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram"
+    },
     "emptyHuman": "No hay conversaciones esperando a un humano. 🎉",
     "needsHuman": "Atención humana",
     "handoffReason": "Derivada: {{reason}}",
