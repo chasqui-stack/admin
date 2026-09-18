@@ -23,6 +23,7 @@
     "dashboard": "Dashboard",
     "prompt": "Prompt",
     "faq": "FAQ / RAG",
+    "knowledge": "Documents",
     "tools": "Tools",
     "conversations": "Conversations",
     "leads": "Leads"
@@ -99,6 +100,53 @@
       "noResults": "No matches — the agent would answer honestly that it doesn't know."
     }
   },
+  "knowledge": {
+    "title": "Document knowledge base",
+    "subtitle": "Documents the agent can search — manuals, catalogs, policies. For short curated answers, use the FAQ.",
+    "dropzone": {
+      "title": "Drop files here, or click to browse",
+      "uploading": "Uploading…",
+      "hint": "{{types}} · up to {{size}} each"
+    },
+    "columns": {
+      "document": "Document",
+      "type": "Type",
+      "size": "Size",
+      "status": "Status",
+      "chunks": "Chunks",
+      "uploaded": "Uploaded"
+    },
+    "status": {
+      "uploading": "Uploading",
+      "pending": "Queued",
+      "processing": "Processing",
+      "ready": "Indexed",
+      "error": "Error"
+    },
+    "rejected": {
+      "unsupported": "\"{{filename}}\" is not a supported type (pdf, docx, txt, md, html)",
+      "tooLarge": "\"{{filename}}\" exceeds the 10 MB limit",
+      "empty": "\"{{filename}}\" is empty",
+      "duplicate": "\"{{filename}}\" was already uploaded",
+      "failed": "Could not upload \"{{filename}}\" — try again"
+    },
+    "reprocess": "Reprocess",
+    "reprocessStarted": "Reprocessing started",
+    "reprocessError": "Could not reprocess — if it keeps failing, delete the document and upload it again",
+    "deleted": "Document deleted",
+    "deleteTitle": "Delete document?",
+    "deleteConfirm": "\"{{filename}}\" and its indexed content will be removed. The agent will no longer answer from it.",
+    "empty": "No documents yet. Upload the first one so the agent can answer from it.",
+    "preview": {
+      "title": "Retrieval preview",
+      "subtitle": "See which passages the agent would retrieve for a query, with their scores.",
+      "placeholder": "e.g. warranty conditions",
+      "run": "Test",
+      "chunk": "passage {{seq}}",
+      "similarity": "similarity",
+      "noResults": "No passages found — no indexed document covers this query."
+    }
+  },
   "tools": {
     "title": "Tools",
     "subtitle": "Enable, disable and configure the agent's tools per module.",
@@ -127,7 +175,10 @@
     "filterAll": "All",
     "filterHuman": "Needs human",
     "filterChannelAll": "All channels",
-    "channel": { "whatsapp": "WhatsApp", "telegram": "Telegram" },
+    "channel": {
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram"
+    },
     "emptyHuman": "No conversations waiting for a human. 🎉",
     "needsHuman": "Needs human",
     "handoffReason": "Handoff: {{reason}}",

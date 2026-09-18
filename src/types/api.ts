@@ -90,6 +90,31 @@ export interface FaqSearchHit {
   similarity: number
 }
 
+// --- Knowledge module (/admin/modules/knowledge) ---
+export type KnowledgeDocumentStatus = "pending" | "processing" | "ready" | "error"
+
+export interface KnowledgeDocument {
+  id: string
+  filename: string
+  mime_type: string
+  size_bytes: number
+  status: KnowledgeDocumentStatus
+  error_detail: string | null
+  chunk_count: number
+  // false when extraction itself failed (e.g. a scanned PDF): nothing stored to retry from
+  can_reprocess: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface KnowledgeSearchHit {
+  document_id: string
+  filename: string
+  seq: number
+  content: string
+  similarity: number
+}
+
 // --- Conversation inspection (/admin/contacts) ---
 export interface LastMessagePreview {
   direction: "in" | "out"

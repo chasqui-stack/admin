@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import {
   BookOpen,
   LayoutDashboard,
+  Library,
   MessageSquare,
   Sparkles,
   UserPlus,
@@ -15,6 +16,7 @@ const navigation = [
   { key: "nav.dashboard", href: "/", icon: LayoutDashboard },
   { key: "nav.prompt", href: "/prompt", icon: Sparkles },
   { key: "nav.faq", href: "/faq", icon: BookOpen },
+  { key: "nav.knowledge", href: "/knowledge", icon: Library },
   { key: "nav.tools", href: "/tools", icon: Wrench },
   { key: "nav.conversations", href: "/conversations", icon: MessageSquare },
   { key: "nav.leads", href: "/leads", icon: UserPlus },
